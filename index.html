@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人生模拟器 - AI对话版</title>
+    <style>
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            font-family: 'Microsoft YaHei', sans-serif;
+            display: flex;
+            justify-content: center;
+            padding-top: 30px;
+            margin: 0;
+        }
+        #game-container {
+            width: 420px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 26px;
+            color: #2196F3;
+            margin: 0 0 5px 0;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+        #status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #666;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        #attr-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            font-size: 13px;
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .attr-item { text-align: center; }
+        .attr-value { font-weight: bold; color: #2196F3; font-size: 16px; }
+
+        #log-box {
+            height: 280px;
+            overflow-y: auto;
+            background-color: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .log-entry { margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+        .age-text { color: #2196F3; font-weight: bold; margin-right: 10px; }
+        .event-text { color: #333; }
+        .special-text { color: #FF9800; font-weight: bold; }
+        .death-text { color: #F44336; font-weight: bold; }
+        .ai-text { color: #9C27B0; font-style: italic; }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #1976D2; }
+        button:disabled { background-color: #aaa; cursor: not-allowed; }
+
+        #ai-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #ai-modal.active { display: flex; }
+        #ai-dialog {
+            width: 380px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #ai-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #9C27B0;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .ai-tag {
+            text-align: center;
+            font-size: 11px;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        #ai-scene {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        #ai-chat {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 200px;
+            max-height: 300px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        .chat-msg {
+            margin-bottom: 10px;
+            display: flex;
+        }
+        .chat-msg.npc { justify-content: flex-start; }
+        .chat-msg.player { justify-content: flex-end; }
+        .bubble {
+            max-width: 70%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .npc .bubble { background: #E1BEE7; color: #333; }
+        .player .bubble { background: #2196F3; color: white; }
+        
+        #ai-input-area {
+            display: flex;
+            gap: 8px;
+        }
+        #ai-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        #ai-send-btn {
+            width: 70px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        #ai-end-btn {
+            width: 100%;
+            margin-top: 10px;
+            background: #999;
+            font-size: 14px;
+            padding: 8px;
+        }
+        .typing { color: #999; font-style: italic; font-size: 13px; }
+        #chat-counter {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>人生模拟器</h1>
+    <div class="subtitle">🤖 AI 对话版 · 点击下一年开启你的人生</div>
+    <div id="status-bar">
+        <span id="age-display">年龄: 0 岁</span>
+        <span id="status-display">普通市民</span>
+    </div>
+    <div id="attr-bar">
+        <div class="attr-item">颜值<div class="attr-value" id="attr-chr">5</div></div>
+        <div class="attr-item">智力<div class="attr-value" id="attr-int">5</div></div>
+        <div class="attr-item">体质<div class="attr-value" id="attr-str">5</div></div>
+        <div class="attr-item">家境<div class="attr-value" id="attr-mny">5</div></div>
+        <div class="attr-item">心情<div class="attr-value" id="attr-hap">50</div></div>
+    </div>
+    <div id="log-box"></div>
+    <button id="next-btn" onclick="nextYear()">下一年</button>
+</div>
+
+<div id="ai-modal">
+    <div id="ai-dialog">
+        <div id="ai-title">💬 AI 对话场景</div>
+        <div class="ai-tag">✨ 真实AI驱动，你说的每句话都会影响结局</div>
+        <div id="ai-scene"></div>
+        <div id="ai-chat"></div>
+        <div id="ai-input-area">
+            <input id="ai-input" type="text" placeholder="输入你的回复...（按回车发送）">
+            <button id="ai-send-btn" onclick="sendMessage()">发送</button>
+        </div>
+        <div id="chat-counter">已对话 0 / 6 轮</div>
+        <button id="ai-end-btn" onclick="endDialog()">结束对话</button>
+    </div>
+</div>
+
+<script>
+    let player = {
+        age: 0, alive: true,
+        chr: 5, int: 5, str: 5, mny: 5, hap: 50,
+        chatHistory: [], currentScene: null,
+        chatScore: 0, chatRounds: 0
+    };
+    
+    const MAX_CHAT_ROUNDS = 6;
+
+    const eventLibrary = [
+        { age: 0, text: "你出生了，伴随着一声啼哭来到这个世界。", special: true },
+        { age: 6, text: "你上小学了，认识了第一个好朋友。" },
+        { age: 12, text: "你升入初中，开始有了自己的小心思。" },
+        { age: 15, text: "中考结束，你考上了重点高中！", special: true, effect: { int: 1 } },
+        { age: 18, text: "高考志愿填报，你父母想让你报师范，但你想学计算机...", special: true, triggerAI: "college_choice" },
+        { age: 19, text: "你进入了大学，开启了崭新的生活。" },
+        { age: 22, text: "你大学毕业了，正式踏入社会。", special: true },
+        { age: 25, text: "在母亲的安排下，你来到咖啡馆相亲...", special: true, triggerAI: "blind_date" },
+        { age: 28, text: "你步入了婚姻的殿堂。", special: true, effect: { hap: 10 } },
+        { age: 30, text: "你的孩子出生了，初为人父/人母。", special: true },
+        { age: 35, text: "公司大裁员，你被老板叫到办公室...", special: true, triggerAI: "boss_talk" },
+        { age: 50, text: "孩子考上了大学，你松了一口气。" },
+        { age: 60, text: "你光荣退休了，准备享受晚年。", special: true },
+        { age: 70, text: "你坐在阳台上晒太阳，回想起这一生...", special: true, triggerAI: "life_review" },
+        { age: 80, text: "你在家人的陪伴下安详离世。", death: true }
+    ];
+
+    const randomEvents = [
+        "今年风平浪静，没什么特别的事。",
+        "你养了一只小猫，给生活增添了乐趣。",
+        "周末和朋友出去玩，心情舒畅。",
+        "工作上遇到点烦心事，但都过去了。",
+        "你最近迷上了短视频，每天刷到深夜。"
+    ];
+
+    const aiScenes = {
+        college_choice: {
+            title: "🎓 与父亲的对话",
+            scene: "餐桌上，父亲放下筷子严肃地看着你...",
+            npcName: "父亲",
+            opening: "孩子，爸跟你讲，师范多好啊，毕业当老师，有寒暑假，稳定！你非要学什么计算机干啥？",
+            npcPersonality: "60岁的传统父亲，是退休工人，固执但深爱孩子。说话朴实带方言味道，常说'爸跟你讲'、'你这孩子'。希望孩子稳定，担心计算机行业不靠谱。被真诚和理性说服时会软化。",
+            endEffects: {
+                success: { effect: { int: 2, hap: 5 }, text: "父亲被你说服了，同意让你学计算机。" },
+                fail: { effect: { hap: -10 }, text: "父亲不为所动，你最终还是听从了他的安排。" }
+            }
+        },
+        blind_date: {
+            title: "💕 相亲对话",
+            scene: "咖啡馆里，对面坐着一位看起来很温柔的姑娘...",
+            npcName: "小美",
+            opening: "你好呀，听说你是程序员？平时工作很忙吧？",
+            npcPersonality: "28岁的温柔女生，小学老师，喜欢爬山、读书、看电影。不喜欢敷衍的人，喜欢有趣有思想、有共同爱好的男生。",
+            endEffects: {
+                success: { effect: { hap: 15, chr: 1 }, text: "你们聊得很投缘，互留了联系方式。" },
+                fail: { effect: { hap: -5 }, text: "气氛有些尴尬，对方礼貌地结束了见面。" }
+            }
+        },
+        boss_talk: {
+            title: "💼 与老板谈话",
+            scene: "老板办公室里气氛凝重，他递给你一份文件...",
+            npcName: "王总",
+            opening: "公司最近效益不好，需要裁员。你在这里也工作好几年了，有什么想说的吗？",
+            npcPersonality: "45岁的中年老板，精明现实但讲道理。员工态度好、有理有据会给好补偿；员工撒泼威胁会按最低标准辞退。",
+            endEffects: {
+                success: { effect: { mny: 2, hap: 5 }, text: "老板被你打动，给了你一笔不错的补偿。" },
+                fail: { effect: { mny: -2, hap: -15 }, text: "你被冷漠地辞退了，只拿到最低补偿。" }
+            }
+        },
+        life_review: {
+            title: "🌙 人生回顾",
+            scene: "夕阳下，你的内心仿佛有一个声音在和你对话...",
+            npcName: "内心之声",
+            opening: "走过这一生，你想说点什么？后悔吗，遗憾吗？",
+            npcPersonality: "你是玩家内心的声音，像一位慈祥的老朋友。回复有哲理但不说教，让玩家说越多真心话，回应越温暖。",
+            endEffects: {
+                success: { effect: { hap: 20 }, text: "你与自己和解了，内心充满了平静。" },
+                fail: { effect: { hap: 0 }, text: "你叹了口气，心中仍有一些放不下的事。" }
+            }
+        }
+    };
+
+    const logBox = document.getElementById("log-box");
+    const nextBtn = document.getElementById("next-btn");
+
+    function nextYear() {
+        if (!player.alive) { resetGame(); return; }
+        player.age++;
+        updateUI();
+        let currentEvent = eventLibrary.find(e => e.age === player.age);
+        if (!currentEvent) {
+            currentEvent = { text: randomEvents[Math.floor(Math.random() * randomEvents.length)] };
+        }
+        logEvent(player.age, currentEvent);
+        if (currentEvent.effect) applyEffect(currentEvent.effect);
+        if (currentEvent.triggerAI) {
+            setTimeout(() => openAIDialog(currentEvent.triggerAI), 500);
+        }
+        if (currentEvent.death) {
+            player.alive = false;
+            nextBtn.innerText = "重新开始人生";
+            nextBtn.style.backgroundColor = "#F44336";
+        }
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function applyEffect(effect) {
+        for (let key in effect) player[key] = (player[key] || 0) + effect[key];
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById("age-display").innerText = `年龄: ${player.age} 岁`;
+        document.getElementById("attr-chr").innerText = player.chr;
+        document.getElementById("attr-int").innerText = player.int;
+        document.getElementById("attr-str").innerText = player.str;
+        document.getElementById("attr-mny").innerText = player.mny;
+        document.getElementById("attr-hap").innerText = player.hap;
+        const sd = document.getElementById("status-display");
+        if (player.age >= 7 && player.age < 18) sd.innerText = "学生党";
+        else if (player.age >= 18 && player.age < 22) sd.innerText = "大学生";
+        else if (player.age >= 22 && player.age < 60) sd.innerText = "打工人";
+        else if (player.age >= 60) sd.innerText = "退休老人";
+    }
+
+    function logEvent(age, ev) {
+        let entry = document.createElement("div");
+        entry.className = "log-entry";
+        let textClass = "event-text";
+        if (ev.special) textClass = "special-text";
+        if (ev.death) textClass = "death-text";
+        if (ev.ai) textClass = "ai-text";
+        entry.innerHTML = `<span class="age-text">${age}岁：</span><span class="${textClass}">${ev.text}</span>`;
+        logBox.appendChild(entry);
+    }
+
+    function openAIDialog(sceneKey) {
+        const scene = aiScenes[sceneKey];
+        if (!scene) return;
+        player.currentScene = sceneKey;
+        player.chatHistory = [];
+        player.chatScore = 0;
+        player.chatRounds = 0;
+        document.getElementById("ai-title").innerText = scene.title;
+        document.getElementById("ai-scene").innerText = scene.scene;
+        document.getElementById("ai-chat").innerHTML = "";
+        document.getElementById("ai-input").value = "";
+        document.getElementById("chat-counter").innerText = `已对话 0 / ${MAX_CHAT_ROUNDS} 轮`;
+        addChatMessage("npc", scene.npcName, scene.opening);
+        document.getElementById("ai-modal").classList.add("active");
+        document.getElementById("ai-input").focus();
+    }
+
+    function addChatMessage(type, name, text) {
+        const chatBox = document.getElementById("ai-chat");
+        const msg = document.createElement("div");
+        msg.className = `chat-msg ${type}`;
+        msg.innerHTML = `<div class="bubble"><b>${name}：</b>${text}</div>`;
+        chatBox.appendChild(msg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function showTyping() {
+        const chatBox = document.getElementById("ai-chat");
+        const typing = document.createElement("div");
+        typing.className = "chat-msg npc typing-msg";
+        typing.innerHTML = `<div class="bubble typing">对方正在输入...</div>`;
+        chatBox.appendChild(typing);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function removeTyping() {
+        const t = document.querySelector(".typing-msg");
+        if (t) t.remove();
+    }
+
+    // ⭐ 核心：调用Netlify Functions（玩家无感）
+    async function generateAIReply(playerText) {
+        const scene = aiScenes[player.currentScene];
+        const messages = [
+            {
+                role: "system",
+                content: `你正在扮演游戏NPC：${scene.npcName}。
+人物设定：${scene.npcPersonality}
+当前场景：${scene.scene}
+
+【重要规则】
+1. 回复必须简短，不超过40个字，符合人物语气
+2. 严格按JSON格式返回，不要markdown代码块
+3. score范围-3到+3：玩家话越真诚契合人物期待分越高，越敷衍冒犯分越低
+
+【返回格式】
+{"reply":"NPC的回复","score":数字}`
+            }
+        ];
+        const recentHistory = player.chatHistory.slice(-8);
+        recentHistory.forEach(h => {
+            messages.push({
+                role: h.role === "player" ? "user" : "assistant",
+                content: h.text
+            });
+        });
+        messages.push({ role: "user", content: playerText });
+        
+        try {
+            // 🎯 这里改成Netlify Functions的路径
+            const response = await fetch("/.netlify/functions/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: messages })
+            });
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            let content = data.choices[0].message.content;
+            content = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonMatch) content = jsonMatch[0];
+            const result = JSON.parse(content);
+            return { 
+                text: result.reply || "（无回复）", 
+                score: parseInt(result.score) || 0
+            };
+        } catch (error) {
+            console.error("API调用失败：", error);
+            return { text: `（网络异常，请稍后再试）`, score: 0 };
+        }
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById("ai-input");
+        const text = input.value.trim();
+        if (!text) return;
+        if (player.chatRounds >= MAX_CHAT_ROUNDS) {
+            alert("对话轮数已达上限，请点击'结束对话'查看结果！");
+            return;
+        }
+        addChatMessage("player", "我", text);
+        player.chatHistory.push({ role: "player", text: text });
+        input.value = "";
+        const sendBtn = document.getElementById("ai-send-btn");
+        sendBtn.disabled = true;
+        sendBtn.innerText = "...";
+        showTyping();
+        const reply = await generateAIReply(text);
+        removeTyping();
+        const sceneObj = aiScenes[player.currentScene];
+        addChatMessage("npc", sceneObj.npcName, reply.text);
+        player.chatHistory.push({ role: "npc", text: reply.text });
+        player.chatScore += reply.score;
+        player.chatRounds++;
+        document.getElementById("chat-counter").innerText = 
+            `已对话 ${player.chatRounds} / ${MAX_CHAT_ROUNDS} 轮 ｜ 当前评分: ${player.chatScore}`;
+        sendBtn.disabled = false;
+        sendBtn.innerText = "发送";
+        document.getElementById("ai-input").focus();
+        if (player.chatRounds >= MAX_CHAT_ROUNDS) {
+            setTimeout(() => alert("对话已达上限，请点击'结束对话'查看结果！"), 500);
+        }
+    }
+
+    function endDialog() {
+        const scene = aiScenes[player.currentScene];
+        const success = player.chatScore >= 4;
+        const result = success ? scene.endEffects.success : scene.endEffects.fail;
+        document.getElementById("ai-modal").classList.remove("active");
+        logEvent(player.age, { 
+            text: `【对话结果·得分${player.chatScore}】${result.text}`, 
+            ai: true 
+        });
+        if (result.effect) applyEffect(result.effect);
+        logBox.scrollTop = logBox.scrollHeight;
+        player.currentScene = null;
+        player.chatHistory = [];
+        player.chatScore = 0;
+        player.chatRounds = 0;
+    }
+
+    document.getElementById("ai-input").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    function resetGame() {
+        player = { 
+            age: 0, alive: true, 
+            chr: 5, int: 5, str: 5, mny: 5, hap: 50, 
+            chatHistory: [], currentScene: null, chatScore: 0, chatRounds: 0
+        };
+        logBox.innerHTML = "";
+        nextBtn.innerText = "下一年";
+        nextBtn.style.backgroundColor = "#2196F3";
+        updateUI();
+        let birthEvent = eventLibrary.find(e => e.age === 0);
+        logEvent(0, birthEvent);
+    }
+
+    window.onload = () => {
+        updateUI();
+        let birthEvent = eventLibrary.find(e => e.age === 0);
+        logEvent(0, birthEvent);
+    };
+</script>
+
+</body>
+</html>

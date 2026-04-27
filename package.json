@@ -1,0 +1,8 @@
+{
+  "name": "life-simulator",
+  "version": "1.0.0",
+  "description": "AI对话版人生模拟器",
+  "engines": {
+    "node": ">=18.x"
+  }
+}
