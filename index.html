@@ -3,526 +3,353 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>人生模拟器 - AI对话版</title>
+    <title>人生模拟器 - 简化版</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #f0f2f5;
-            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
-            padding-top: 30px;
-            margin: 0;
-        }
-        #game-container {
-            width: 420px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            font-size: 26px;
-            color: #2196F3;
-            margin: 0 0 5px 0;
-        }
-        .subtitle {
-            text-align: center;
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 15px;
-        }
-        #status-bar {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            font-weight: bold;
-            color: #666;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        #attr-bar {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 15px;
-            font-size: 13px;
-            background: #f9f9f9;
-            padding: 8px;
-            border-radius: 6px;
-        }
-        .attr-item { text-align: center; }
-        .attr-value { font-weight: bold; color: #2196F3; font-size: 16px; }
-
-        #log-box {
-            height: 280px;
-            overflow-y: auto;
-            background-color: #fafafa;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            margin-bottom: 15px;
-            line-height: 1.6;
-        }
-        .log-entry { margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
-        .age-text { color: #2196F3; font-weight: bold; margin-right: 10px; }
-        .event-text { color: #333; }
-        .special-text { color: #FF9800; font-weight: bold; }
-        .death-text { color: #F44336; font-weight: bold; }
-        .ai-text { color: #9C27B0; font-style: italic; }
-        
-        button {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover { background-color: #1976D2; }
-        button:disabled { background-color: #aaa; cursor: not-allowed; }
-
-        #ai-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
             justify-content: center;
             align-items: center;
-            z-index: 100;
-        }
-        #ai-modal.active { display: flex; }
-        #ai-dialog {
-            width: 380px;
-            background: white;
-            border-radius: 12px;
             padding: 20px;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
         }
-        #ai-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #9C27B0;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-        .ai-tag {
-            text-align: center;
-            font-size: 11px;
-            color: #4CAF50;
-            margin-bottom: 10px;
-        }
-        #ai-scene {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        #ai-chat {
-            flex: 1;
-            overflow-y: auto;
-            min-height: 200px;
-            max-height: 300px;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #fafafa;
-            border-radius: 8px;
-        }
-        .chat-msg {
-            margin-bottom: 10px;
-            display: flex;
-        }
-        .chat-msg.npc { justify-content: flex-start; }
-        .chat-msg.player { justify-content: flex-end; }
-        .bubble {
-            max-width: 70%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        .npc .bubble { background: #E1BEE7; color: #333; }
-        .player .bubble { background: #2196F3; color: white; }
-        
-        #ai-input-area {
-            display: flex;
-            gap: 8px;
-        }
-        #ai-input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        #ai-send-btn {
-            width: 70px;
-            padding: 8px;
-            font-size: 14px;
-        }
-        #ai-end-btn {
+        #game-box {
             width: 100%;
-            margin-top: 10px;
-            background: #999;
-            font-size: 14px;
-            padding: 8px;
+            max-width: 480px;
+            background: rgba(255,255,255,0.96);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        .typing { color: #999; font-style: italic; font-size: 13px; }
-        #chat-counter {
+        h1 { text-align: center; color: #333; margin-bottom: 4px; font-size: 26px; }
+        .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 20px; }
+
+        #age-display {
             text-align: center;
-            font-size: 11px;
-            color: #999;
-            margin-top: 5px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+
+        #event-card {
+            background: #f8f9fa;
+            border-radius: 14px;
+            padding: 22px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 14px;
+            border-left: 5px solid #667eea;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #result-card {
+            display: none;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            color: #856404;
+            margin-bottom: 14px;
+        }
+
+        #choices-box {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .choice-btn {
+            padding: 14px 18px;
+            border: 2px solid #667eea;
+            background: #fff;
+            color: #667eea;
+            border-radius: 12px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-weight: 500;
+        }
+        .choice-btn:hover {
+            background: #667eea;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        .choice-btn:active { transform: translateY(0); }
+
+        #attrs-box { margin-bottom: 18px; }
+        .attr-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        .attr-label { width: 40px; font-size: 13px; color: #555; font-weight: 500; }
+        .attr-bar-bg {
+            flex: 1;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .attr-bar-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        .attr-value { width: 36px; text-align: right; font-size: 13px; font-weight: bold; color: #444; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 17px;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover { opacity: 0.92; transform: translateY(-2px); }
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #game-page { display: block; }
+        #ending-page { display: none; text-align: center; padding: 20px 0; }
+        .ending-icon { font-size: 48px; margin-bottom: 10px; }
+        .ending-title { font-size: 26px; font-weight: bold; color: #e74c3c; margin-bottom: 10px; }
+        .ending-desc { font-size: 15px; color: #555; margin-bottom: 24px; line-height: 1.7; }
+        .ending-score { font-size: 14px; color: #777; margin-bottom: 6px; }
+
+        @media (max-width: 480px) {
+            #game-box { padding: 20px; border-radius: 16px; }
+            h1 { font-size: 22px; }
         }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <h1>人生模拟器</h1>
-    <div class="subtitle">🤖 AI 对话版 · 点击下一年开启你的人生</div>
-    <div id="status-bar">
-        <span id="age-display">年龄: 0 岁</span>
-        <span id="status-display">普通市民</span>
-    </div>
-    <div id="attr-bar">
-        <div class="attr-item">颜值<div class="attr-value" id="attr-chr">5</div></div>
-        <div class="attr-item">智力<div class="attr-value" id="attr-int">5</div></div>
-        <div class="attr-item">体质<div class="attr-value" id="attr-str">5</div></div>
-        <div class="attr-item">家境<div class="attr-value" id="attr-mny">5</div></div>
-        <div class="attr-item">心情<div class="attr-value" id="attr-hap">50</div></div>
-    </div>
-    <div id="log-box"></div>
-    <button id="next-btn" onclick="nextYear()">下一年</button>
-</div>
+<div id="game-box">
+    <h1>🎮 人生模拟器</h1>
+    <div class="subtitle">简化版 · 点击选项，过完一生</div>
 
-<div id="ai-modal">
-    <div id="ai-dialog">
-        <div id="ai-title">💬 AI 对话场景</div>
-        <div class="ai-tag">✨ 真实AI驱动，你说的每句话都会影响结局</div>
-        <div id="ai-scene"></div>
-        <div id="ai-chat"></div>
-        <div id="ai-input-area">
-            <input id="ai-input" type="text" placeholder="输入你的回复...（按回车发送）">
-            <button id="ai-send-btn" onclick="sendMessage()">发送</button>
+    <div id="game-page">
+        <div id="age-display">年龄: 0 岁</div>
+        <div id="event-card">你出生了，伴随着一声啼哭来到这个世界。</div>
+        <div id="result-card"></div>
+        <div id="choices-box"></div>
+
+        <div id="attrs-box">
+            <div class="attr-row">
+                <span class="attr-label">智力</span>
+                <div class="attr-bar-bg"><div class="attr-bar-fill" id="bar-int" style="width:50%;background:#3498db"></div></div>
+                <span class="attr-value" id="val-int">50</span>
+            </div>
+            <div class="attr-row">
+                <span class="attr-label">体质</span>
+                <div class="attr-bar-bg"><div class="attr-bar-fill" id="bar-str" style="width:50%;background:#2ecc71"></div></div>
+                <span class="attr-value" id="val-str">50</span>
+            </div>
+            <div class="attr-row">
+                <span class="attr-label">财富</span>
+                <div class="attr-bar-bg"><div class="attr-bar-fill" id="bar-mny" style="width:50%;background:#f39c12"></div></div>
+                <span class="attr-value" id="val-mny">50</span>
+            </div>
+            <div class="attr-row">
+                <span class="attr-label">快乐</span>
+                <div class="attr-bar-bg"><div class="attr-bar-fill" id="bar-hap" style="width:50%;background:#e74c3c"></div></div>
+                <span class="attr-value" id="val-hap">50</span>
+            </div>
         </div>
-        <div id="chat-counter">已对话 0 / 6 轮</div>
-        <button id="ai-end-btn" onclick="endDialog()">结束对话</button>
+
+        <button id="next-btn" class="btn btn-primary" onclick="nextYear()">下一年</button>
+    </div>
+
+    <div id="ending-page">
+        <div class="ending-icon" id="ending-icon">🏁</div>
+        <div class="ending-title" id="ending-title">人生落幕</div>
+        <div class="ending-desc" id="ending-desc"></div>
+        <div id="ending-stats"></div>
+        <button class="btn btn-primary" onclick="resetGame()" style="margin-top:10px">重新开始</button>
     </div>
 </div>
 
 <script>
-    let player = {
-        age: 0, alive: true,
-        chr: 5, int: 5, str: 5, mny: 5, hap: 50,
-        chatHistory: [], currentScene: null,
-        chatScore: 0, chatRounds: 0
-    };
-    
-    const MAX_CHAT_ROUNDS = 6;
+    let player = { age: 0, alive: true, int: 50, str: 50, mny: 50, hap: 50, waitingChoice: false };
 
-    const eventLibrary = [
-        { age: 0, text: "你出生了，伴随着一声啼哭来到这个世界。", special: true },
-        { age: 6, text: "你上小学了，认识了第一个好朋友。" },
-        { age: 12, text: "你升入初中，开始有了自己的小心思。" },
-        { age: 15, text: "中考结束，你考上了重点高中！", special: true, effect: { int: 1 } },
-        { age: 18, text: "高考志愿填报，你父母想让你报师范，但你想学计算机...", special: true, triggerAI: "college_choice" },
-        { age: 19, text: "你进入了大学，开启了崭新的生活。" },
-        { age: 22, text: "你大学毕业了，正式踏入社会。", special: true },
-        { age: 25, text: "在母亲的安排下，你来到咖啡馆相亲...", special: true, triggerAI: "blind_date" },
-        { age: 28, text: "你步入了婚姻的殿堂。", special: true, effect: { hap: 10 } },
-        { age: 30, text: "你的孩子出生了，初为人父/人母。", special: true },
-        { age: 35, text: "公司大裁员，你被老板叫到办公室...", special: true, triggerAI: "boss_talk" },
-        { age: 50, text: "孩子考上了大学，你松了一口气。" },
-        { age: 60, text: "你光荣退休了，准备享受晚年。", special: true },
-        { age: 70, text: "你坐在阳台上晒太阳，回想起这一生...", special: true, triggerAI: "life_review" },
-        { age: 80, text: "你在家人的陪伴下安详离世。", death: true }
+    const events = [
+        { age: 0, text: "你出生了，伴随着一声啼哭来到这个世界。" },
+        { age: 6, text: "你上小学了，老师夸你聪明伶俐。", effect: { int: 3 } },
+        { age: 12, text: "班上调皮的同学想抢你的午饭钱...", choices: [
+            { text: "🛡️ 反抗（可能受伤）", effect: { str: 8, hap: -5 }, result: "你虽然挨了一拳，但保住了尊严，身体也更结实了。" },
+            { text: "🏃 告诉老师", effect: { int: 5, hap: 3 }, result: "老师批评了那个同学，你安心吃了午饭。" }
+        ]},
+        { age: 15, text: "中考在即，你面临人生第一次重要选择...", choices: [
+            { text: "📚 拼命学习", effect: { int: 12, str: -5, hap: -5 }, result: "你考上了重点高中，但熬夜太多，身体累坏了。" },
+            { text: "🎮 顺其自然", effect: { int: -5, hap: 10 }, result: "你轻松度过了初中，但成绩一般，去了普通高中。" }
+        ]},
+        { age: 18, text: "高考结束，填报志愿时家人希望你学师范...", choices: [
+            { text: "💻 坚持计算机", effect: { int: 8, mny: 5, hap: 5 }, result: "你选择了热爱的专业，虽然辛苦但很充实。" },
+            { text: "📖 听从家人学师范", effect: { int: 3, hap: -5, mny: 2 }, result: "你听从了安排，但心里总有些不甘。" }
+        ]},
+        { age: 22, text: "大学毕业，你拿到了两份 offer...", choices: [
+            { text: "🏢 去大厂卷", effect: { mny: 15, hap: -5, str: -5 }, result: "高薪但 996，头发开始变少了。" },
+            { text: "🏛️ 考公务员", effect: { mny: 5, hap: 5, str: 5 }, result: "工作稳定，朝九晚五，但薪资一般。" }
+        ]},
+        { age: 28, text: "家里安排你去相亲，对面坐着一位看起来很温柔的姑娘...", choices: [
+            { text: "😊 热情主动，聊聊爱好", effect: { hap: 12, mny: -3 }, result: "你们聊得很开心，对方愿意继续交往。" },
+            { text: "😶 低头玩手机，敷衍了事", effect: { hap: -8 }, result: "场面一度很尴尬，对方礼貌地结束了见面。" }
+        ]},
+        { age: 30, text: "你的孩子出生了，你成为了父亲/母亲。", effect: { hap: 5, mny: -5 } },
+        { age: 35, text: "公司效益不好，老板暗示可能要裁员...", choices: [
+            { text: "🔥 主动跳槽，寻找新机会", effect: { mny: 12, hap: 5, int: 5 }, result: "你找到了更好的平台，薪资还涨了。" },
+            { text: "😰 忍气吞声，继续熬着", effect: { mny: -5, hap: -10, str: -5 }, result: "你每天活在焦虑中，身心俱疲。" }
+        ]},
+        { age: 45, text: "手里有点积蓄，朋友推荐投资机会...", choices: [
+            { text: "🏠 买房投资", effect: { mny: 15 }, result: "几年后房价大涨，你暗自庆幸。" },
+            { text: "📈 全仓炒股", effect: { mny: -15, hap: -8 }, result: "股市暴跌，你的积蓄缩水大半。" }
+        ]},
+        { age: 60, text: "你退休了，开始享受晚年生活。", effect: { hap: 8, str: -5 } },
+        { age: 75, text: "孙子经常来看你，你觉得很满足。", effect: { hap: 5 } },
+        { age: 85, text: "你在一个阳光明媚的早晨，在睡梦中安详离世。", death: true }
     ];
 
     const randomEvents = [
-        "今年风平浪静，没什么特别的事。",
-        "你养了一只小猫，给生活增添了乐趣。",
-        "周末和朋友出去玩，心情舒畅。",
-        "工作上遇到点烦心事，但都过去了。",
-        "你最近迷上了短视频，每天刷到深夜。"
+        "今年风平浪静，生活平淡如水。",
+        "周末和朋友聚餐，心情不错。",
+        "工作上有小突破，得到了表扬。",
+        "换季感冒了，在家休息了几天。",
+        "你学会了一道新菜，家人很喜欢。",
+        "路上捡了100块钱，运气不错。",
+        "老家亲戚来串门，热闹了一阵子。",
+        "你迷上了一部电视剧，追完了全集。"
     ];
 
-    const aiScenes = {
-        college_choice: {
-            title: "🎓 与父亲的对话",
-            scene: "餐桌上，父亲放下筷子严肃地看着你...",
-            npcName: "父亲",
-            opening: "孩子，爸跟你讲，师范多好啊，毕业当老师，有寒暑假，稳定！你非要学什么计算机干啥？",
-            npcPersonality: "60岁的传统父亲，是退休工人，固执但深爱孩子。说话朴实带方言味道，常说'爸跟你讲'、'你这孩子'。希望孩子稳定，担心计算机行业不靠谱。被真诚和理性说服时会软化。",
-            endEffects: {
-                success: { effect: { int: 2, hap: 5 }, text: "父亲被你说服了，同意让你学计算机。" },
-                fail: { effect: { hap: -10 }, text: "父亲不为所动，你最终还是听从了他的安排。" }
-            }
-        },
-        blind_date: {
-            title: "💕 相亲对话",
-            scene: "咖啡馆里，对面坐着一位看起来很温柔的姑娘...",
-            npcName: "小美",
-            opening: "你好呀，听说你是程序员？平时工作很忙吧？",
-            npcPersonality: "28岁的温柔女生，小学老师，喜欢爬山、读书、看电影。不喜欢敷衍的人，喜欢有趣有思想、有共同爱好的男生。",
-            endEffects: {
-                success: { effect: { hap: 15, chr: 1 }, text: "你们聊得很投缘，互留了联系方式。" },
-                fail: { effect: { hap: -5 }, text: "气氛有些尴尬，对方礼貌地结束了见面。" }
-            }
-        },
-        boss_talk: {
-            title: "💼 与老板谈话",
-            scene: "老板办公室里气氛凝重，他递给你一份文件...",
-            npcName: "王总",
-            opening: "公司最近效益不好，需要裁员。你在这里也工作好几年了，有什么想说的吗？",
-            npcPersonality: "45岁的中年老板，精明现实但讲道理。员工态度好、有理有据会给好补偿；员工撒泼威胁会按最低标准辞退。",
-            endEffects: {
-                success: { effect: { mny: 2, hap: 5 }, text: "老板被你打动，给了你一笔不错的补偿。" },
-                fail: { effect: { mny: -2, hap: -15 }, text: "你被冷漠地辞退了，只拿到最低补偿。" }
-            }
-        },
-        life_review: {
-            title: "🌙 人生回顾",
-            scene: "夕阳下，你的内心仿佛有一个声音在和你对话...",
-            npcName: "内心之声",
-            opening: "走过这一生，你想说点什么？后悔吗，遗憾吗？",
-            npcPersonality: "你是玩家内心的声音，像一位慈祥的老朋友。回复有哲理但不说教，让玩家说越多真心话，回应越温暖。",
-            endEffects: {
-                success: { effect: { hap: 20 }, text: "你与自己和解了，内心充满了平静。" },
-                fail: { effect: { hap: 0 }, text: "你叹了口气，心中仍有一些放不下的事。" }
-            }
-        }
-    };
-
-    const logBox = document.getElementById("log-box");
-    const nextBtn = document.getElementById("next-btn");
-
-    function nextYear() {
-        if (!player.alive) { resetGame(); return; }
-        player.age++;
-        updateUI();
-        let currentEvent = eventLibrary.find(e => e.age === player.age);
-        if (!currentEvent) {
-            currentEvent = { text: randomEvents[Math.floor(Math.random() * randomEvents.length)] };
-        }
-        logEvent(player.age, currentEvent);
-        if (currentEvent.effect) applyEffect(currentEvent.effect);
-        if (currentEvent.triggerAI) {
-            setTimeout(() => openAIDialog(currentEvent.triggerAI), 500);
-        }
-        if (currentEvent.death) {
-            player.alive = false;
-            nextBtn.innerText = "重新开始人生";
-            nextBtn.style.backgroundColor = "#F44336";
-        }
-        logBox.scrollTop = logBox.scrollHeight;
-    }
+    function clamp(v) { return Math.max(0, Math.min(100, v)); }
 
     function applyEffect(effect) {
-        for (let key in effect) player[key] = (player[key] || 0) + effect[key];
+        if (!effect) return;
+        for (let key in effect) {
+            if (player[key] !== undefined) player[key] = clamp(player[key] + effect[key]);
+        }
         updateUI();
     }
 
     function updateUI() {
-        document.getElementById("age-display").innerText = `年龄: ${player.age} 岁`;
-        document.getElementById("attr-chr").innerText = player.chr;
-        document.getElementById("attr-int").innerText = player.int;
-        document.getElementById("attr-str").innerText = player.str;
-        document.getElementById("attr-mny").innerText = player.mny;
-        document.getElementById("attr-hap").innerText = player.hap;
-        const sd = document.getElementById("status-display");
-        if (player.age >= 7 && player.age < 18) sd.innerText = "学生党";
-        else if (player.age >= 18 && player.age < 22) sd.innerText = "大学生";
-        else if (player.age >= 22 && player.age < 60) sd.innerText = "打工人";
-        else if (player.age >= 60) sd.innerText = "退休老人";
+        document.getElementById('age-display').innerText = `年龄: ${player.age} 岁`;
+        document.getElementById('val-int').innerText = player.int;
+        document.getElementById('val-str').innerText = player.str;
+        document.getElementById('val-mny').innerText = player.mny;
+        document.getElementById('val-hap').innerText = player.hap;
+        document.getElementById('bar-int').style.width = player.int + '%';
+        document.getElementById('bar-str').style.width = player.str + '%';
+        document.getElementById('bar-mny').style.width = player.mny + '%';
+        document.getElementById('bar-hap').style.width = player.hap + '%';
     }
 
-    function logEvent(age, ev) {
-        let entry = document.createElement("div");
-        entry.className = "log-entry";
-        let textClass = "event-text";
-        if (ev.special) textClass = "special-text";
-        if (ev.death) textClass = "death-text";
-        if (ev.ai) textClass = "ai-text";
-        entry.innerHTML = `<span class="age-text">${age}岁：</span><span class="${textClass}">${ev.text}</span>`;
-        logBox.appendChild(entry);
-    }
+    function nextYear() {
+        if (!player.alive || player.waitingChoice) return;
+        player.age++;
 
-    function openAIDialog(sceneKey) {
-        const scene = aiScenes[sceneKey];
-        if (!scene) return;
-        player.currentScene = sceneKey;
-        player.chatHistory = [];
-        player.chatScore = 0;
-        player.chatRounds = 0;
-        document.getElementById("ai-title").innerText = scene.title;
-        document.getElementById("ai-scene").innerText = scene.scene;
-        document.getElementById("ai-chat").innerHTML = "";
-        document.getElementById("ai-input").value = "";
-        document.getElementById("chat-counter").innerText = `已对话 0 / ${MAX_CHAT_ROUNDS} 轮`;
-        addChatMessage("npc", scene.npcName, scene.opening);
-        document.getElementById("ai-modal").classList.add("active");
-        document.getElementById("ai-input").focus();
-    }
+        let ev = events.find(e => e.age === player.age);
+        if (!ev) {
+            ev = { text: randomEvents[Math.floor(Math.random() * randomEvents.length)] };
+        }
 
-    function addChatMessage(type, name, text) {
-        const chatBox = document.getElementById("ai-chat");
-        const msg = document.createElement("div");
-        msg.className = `chat-msg ${type}`;
-        msg.innerHTML = `<div class="bubble"><b>${name}：</b>${text}</div>`;
-        chatBox.appendChild(msg);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+        document.getElementById('event-card').innerText = ev.text;
+        document.getElementById('result-card').style.display = 'none';
 
-    function showTyping() {
-        const chatBox = document.getElementById("ai-chat");
-        const typing = document.createElement("div");
-        typing.className = "chat-msg npc typing-msg";
-        typing.innerHTML = `<div class="bubble typing">对方正在输入...</div>`;
-        chatBox.appendChild(typing);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+        if (ev.effect) applyEffect(ev.effect);
 
-    function removeTyping() {
-        const t = document.querySelector(".typing-msg");
-        if (t) t.remove();
-    }
-
-    // ⭐ 核心：调用Netlify Functions（玩家无感）
-    async function generateAIReply(playerText) {
-        const scene = aiScenes[player.currentScene];
-        const messages = [
-            {
-                role: "system",
-                content: `你正在扮演游戏NPC：${scene.npcName}。
-人物设定：${scene.npcPersonality}
-当前场景：${scene.scene}
-
-【重要规则】
-1. 回复必须简短，不超过40个字，符合人物语气
-2. 严格按JSON格式返回，不要markdown代码块
-3. score范围-3到+3：玩家话越真诚契合人物期待分越高，越敷衍冒犯分越低
-
-【返回格式】
-{"reply":"NPC的回复","score":数字}`
-            }
-        ];
-        const recentHistory = player.chatHistory.slice(-8);
-        recentHistory.forEach(h => {
-            messages.push({
-                role: h.role === "player" ? "user" : "assistant",
-                content: h.text
+        if (ev.choices) {
+            player.waitingChoice = true;
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('next-btn').innerText = "请做出选择...";
+            const box = document.getElementById('choices-box');
+            box.innerHTML = '';
+            box.style.display = 'flex';
+            ev.choices.forEach((c, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = c.text;
+                btn.onclick = () => choose(idx, ev.choices);
+                box.appendChild(btn);
             });
-        });
-        messages.push({ role: "user", content: playerText });
-        
-        try {
-            // 🎯 这里改成Netlify Functions的路径
-            const response = await fetch("/.netlify/functions/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages: messages })
-            });
-            
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            const data = await response.json();
-            let content = data.choices[0].message.content;
-            content = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (jsonMatch) content = jsonMatch[0];
-            const result = JSON.parse(content);
-            return { 
-                text: result.reply || "（无回复）", 
-                score: parseInt(result.score) || 0
-            };
-        } catch (error) {
-            console.error("API调用失败：", error);
-            return { text: `（网络异常，请稍后再试）`, score: 0 };
+        } else if (ev.death) {
+            player.alive = false;
+            setTimeout(showEnding, 600);
         }
+
+        updateUI();
     }
 
-    async function sendMessage() {
-        const input = document.getElementById("ai-input");
-        const text = input.value.trim();
-        if (!text) return;
-        if (player.chatRounds >= MAX_CHAT_ROUNDS) {
-            alert("对话轮数已达上限，请点击'结束对话'查看结果！");
-            return;
-        }
-        addChatMessage("player", "我", text);
-        player.chatHistory.push({ role: "player", text: text });
-        input.value = "";
-        const sendBtn = document.getElementById("ai-send-btn");
-        sendBtn.disabled = true;
-        sendBtn.innerText = "...";
-        showTyping();
-        const reply = await generateAIReply(text);
-        removeTyping();
-        const sceneObj = aiScenes[player.currentScene];
-        addChatMessage("npc", sceneObj.npcName, reply.text);
-        player.chatHistory.push({ role: "npc", text: reply.text });
-        player.chatScore += reply.score;
-        player.chatRounds++;
-        document.getElementById("chat-counter").innerText = 
-            `已对话 ${player.chatRounds} / ${MAX_CHAT_ROUNDS} 轮 ｜ 当前评分: ${player.chatScore}`;
-        sendBtn.disabled = false;
-        sendBtn.innerText = "发送";
-        document.getElementById("ai-input").focus();
-        if (player.chatRounds >= MAX_CHAT_ROUNDS) {
-            setTimeout(() => alert("对话已达上限，请点击'结束对话'查看结果！"), 500);
-        }
+    function choose(idx, choices) {
+        const c = choices[idx];
+        applyEffect(c.effect);
+        document.getElementById('result-card').innerText = c.result;
+        document.getElementById('result-card').style.display = 'block';
+        document.getElementById('choices-box').style.display = 'none';
+        document.getElementById('next-btn').disabled = false;
+        document.getElementById('next-btn').innerText = "下一年";
+        player.waitingChoice = false;
     }
 
-    function endDialog() {
-        const scene = aiScenes[player.currentScene];
-        const success = player.chatScore >= 4;
-        const result = success ? scene.endEffects.success : scene.endEffects.fail;
-        document.getElementById("ai-modal").classList.remove("active");
-        logEvent(player.age, { 
-            text: `【对话结果·得分${player.chatScore}】${result.text}`, 
-            ai: true 
-        });
-        if (result.effect) applyEffect(result.effect);
-        logBox.scrollTop = logBox.scrollHeight;
-        player.currentScene = null;
-        player.chatHistory = [];
-        player.chatScore = 0;
-        player.chatRounds = 0;
-    }
+    function showEnding() {
+        document.getElementById('game-page').style.display = 'none';
+        document.getElementById('ending-page').style.display = 'block';
 
-    document.getElementById("ai-input").addEventListener("keypress", function(e) {
-        if (e.key === "Enter") sendMessage();
-    });
+        const total = player.int + player.str + player.mny + player.hap;
+        let title, desc, icon;
+        if (total >= 300) {
+            icon = '👑'; title = '传奇人生'; desc = '你的一生精彩纷呈，名利双收，是众人羡慕的对象。';
+        } else if (total >= 240) {
+            icon = '🌟'; title = '幸福美满'; desc = '你过得充实而快乐，家庭和睦，事业顺遂，令人羡慕。';
+        } else if (total >= 180) {
+            icon = '🍵'; title = '平平淡淡'; desc = '你没有大富大贵，但也没有大灾大难，这是大多数人的常态。';
+        } else if (total >= 120) {
+            icon = '🍂'; title = '略带遗憾'; desc = '人生多舛，几次关键选择都不尽如人意，但你依然坚强地走过了这一生。';
+        } else {
+            icon = '🥀'; title = '遗憾终生'; desc = '命运似乎总在和你开玩笑，一生坎坷，令人唏嘘。';
+        }
+
+        document.getElementById('ending-icon').innerText = icon;
+        document.getElementById('ending-title').innerText = title;
+        document.getElementById('ending-desc').innerText = desc;
+        document.getElementById('ending-stats').innerHTML = `
+            <div class="ending-score">智力: ${player.int}　体质: ${player.str}　财富: ${player.mny}　快乐: ${player.hap}</div>
+            <div class="ending-score">总分: ${total} / 400</div>
+        `;
+    }
 
     function resetGame() {
-        player = { 
-            age: 0, alive: true, 
-            chr: 5, int: 5, str: 5, mny: 5, hap: 50, 
-            chatHistory: [], currentScene: null, chatScore: 0, chatRounds: 0
-        };
-        logBox.innerHTML = "";
-        nextBtn.innerText = "下一年";
-        nextBtn.style.backgroundColor = "#2196F3";
+        player = { age: 0, alive: true, int: 50, str: 50, mny: 50, hap: 50, waitingChoice: false };
+        document.getElementById('game-page').style.display = 'block';
+        document.getElementById('ending-page').style.display = 'none';
+        document.getElementById('event-card').innerText = "你出生了，伴随着一声啼哭来到这个世界。";
+        document.getElementById('result-card').style.display = 'none';
+        document.getElementById('choices-box').style.display = 'none';
+        document.getElementById('next-btn').disabled = false;
+        document.getElementById('next-btn').innerText = "下一年";
         updateUI();
-        let birthEvent = eventLibrary.find(e => e.age === 0);
-        logEvent(0, birthEvent);
     }
 
-    window.onload = () => {
-        updateUI();
-        let birthEvent = eventLibrary.find(e => e.age === 0);
-        logEvent(0, birthEvent);
-    };
+    updateUI();
 </script>
 
 </body>
