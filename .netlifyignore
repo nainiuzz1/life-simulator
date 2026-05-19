@@ -1,0 +1,12 @@
+.git
+.claude
+.netlify
+node_modules
+.npm-cache
+scf
+scf-deploy.zip
+server.js
+CLAUDE.md
+AGENTS.md
+*.log
+.env

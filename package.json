@@ -4,5 +4,11 @@
   "description": "AI对话版人生模拟器",
   "engines": {
     "node": ">=18.x"
-  }
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "netlify-dev": "netlify dev"
+  },
+  "dependencies": {}
 }

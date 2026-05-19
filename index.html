@@ -1,355 +1,2325 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>人生模拟器 - 简化版</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Microsoft YaHei', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        #game-box {
-            width: 100%;
-            max-width: 480px;
-            background: rgba(255,255,255,0.96);
-            border-radius: 20px;
-            padding: 28px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        h1 { text-align: center; color: #333; margin-bottom: 4px; font-size: 26px; }
-        .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 20px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人间重开 🎮 创建人生</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
 
-        #age-display {
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 16px;
-        }
+:root {
+    --bg: #FFE8B0;
+    --card: #FFFFFF;
+    --ink: #2D2D2D;
+    --pink: #FF6B9D;
+    --red: #FF5C5C;
+    --orange: #FFA94D;
+    --yellow: #FFD93D;
+    --green: #6BCB77;
+    --mint: #4ECDC4;
+    --blue: #4D96FF;
+    --purple: #B983FF;
+    --shadow: 4px 4px 0 #2D2D2D;
+    --shadow-lg: 6px 6px 0 #2D2D2D;
+    --shadow-sm: 2px 2px 0 #2D2D2D;
+}
 
-        #event-card {
-            background: #f8f9fa;
-            border-radius: 14px;
-            padding: 22px;
-            text-align: center;
-            font-size: 16px;
-            line-height: 1.7;
-            color: #333;
-            margin-bottom: 14px;
-            border-left: 5px solid #667eea;
-            min-height: 90px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+html, body { overflow-x: hidden; }
 
-        #result-card {
-            display: none;
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            font-size: 14px;
-            color: #856404;
-            margin-bottom: 14px;
-        }
+body {
+    font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255, 217, 61, 0.4) 0%, transparent 30%),
+        radial-gradient(circle at 90% 80%, rgba(255, 107, 157, 0.3) 0%, transparent 30%),
+        radial-gradient(circle at 50% 50%, rgba(78, 205, 196, 0.2) 0%, transparent 40%);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
 
-        #choices-box {
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .choice-btn {
-            padding: 14px 18px;
-            border: 2px solid #667eea;
-            background: #fff;
-            color: #667eea;
-            border-radius: 12px;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-            font-weight: 500;
-        }
-        .choice-btn:hover {
-            background: #667eea;
-            color: #fff;
-            transform: translateY(-2px);
-        }
-        .choice-btn:active { transform: translateY(0); }
+/* ============ 漂浮装饰 ============ */
+.floating-deco {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
 
-        #attrs-box { margin-bottom: 18px; }
-        .attr-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            gap: 10px;
-        }
-        .attr-label { width: 40px; font-size: 13px; color: #555; font-weight: 500; }
-        .attr-bar-bg {
-            flex: 1;
-            height: 10px;
-            background: #e9ecef;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .attr-bar-fill {
-            height: 100%;
-            border-radius: 5px;
-            transition: width 0.5s ease;
-        }
-        .attr-value { width: 36px; text-align: right; font-size: 13px; font-weight: bold; color: #444; }
+.float-item {
+    position: absolute;
+    font-size: 32px;
+    animation: floatUp linear infinite;
+    opacity: 0.6;
+}
 
-        .btn {
-            width: 100%;
-            padding: 14px;
-            font-size: 17px;
-            font-weight: bold;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .btn-primary:hover { opacity: 0.92; transform: translateY(-2px); }
-        .btn-primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
+@keyframes floatUp {
+    from {
+        transform: translateY(110vh) rotate(0deg);
+    }
+    to {
+        transform: translateY(-20vh) rotate(360deg);
+    }
+}
 
-        #game-page { display: block; }
-        #ending-page { display: none; text-align: center; padding: 20px 0; }
-        .ending-icon { font-size: 48px; margin-bottom: 10px; }
-        .ending-title { font-size: 26px; font-weight: bold; color: #e74c3c; margin-bottom: 10px; }
-        .ending-desc { font-size: 15px; color: #555; margin-bottom: 24px; line-height: 1.7; }
-        .ending-score { font-size: 14px; color: #777; margin-bottom: 6px; }
+/* ============ 容器 ============ */
+.container {
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    z-index: 10;
+    animation: containerPop 800ms cubic-bezier(0.34, 1.8, 0.64, 1);
+}
 
-        @media (max-width: 480px) {
-            #game-box { padding: 20px; border-radius: 16px; }
-            h1 { font-size: 22px; }
-        }
-    </style>
+@keyframes containerPop {
+    0% { opacity: 0; transform: scale(0.5) rotate(-5deg); }
+    60% { transform: scale(1.05) rotate(2deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* ============ 标题 ============ */
+.header {
+    text-align: center;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.title {
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 56px;
+    font-weight: 900;
+    color: var(--ink);
+    -webkit-text-stroke: 3px var(--ink);
+    text-shadow: 
+        4px 4px 0 var(--yellow),
+        8px 8px 0 var(--pink);
+    letter-spacing: 8px;
+    display: inline-block;
+    animation: titleWobble 3s ease-in-out infinite;
+}
+
+@keyframes titleWobble {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+}
+
+.title-emoji {
+    display: inline-block;
+    animation: emojiSpin 4s linear infinite;
+}
+
+@keyframes emojiSpin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-15deg) scale(1.1); }
+    75% { transform: rotate(15deg) scale(1.1); }
+}
+
+.subtitle {
+    margin-top: 12px;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--yellow);
+    display: inline-block;
+    padding: 4px 16px;
+    border: 3px solid var(--ink);
+    border-radius: 30px;
+    box-shadow: var(--shadow-sm);
+    transform: rotate(-2deg);
+    animation: subtitleBounce 2s ease-in-out infinite;
+}
+
+@keyframes subtitleBounce {
+    0%, 100% { transform: rotate(-2deg) translateY(0); }
+    50% { transform: rotate(-2deg) translateY(-4px); }
+}
+
+/* ============ 主卡片 ============ */
+.card {
+    background: var(--card);
+    border: 4px solid var(--ink);
+    border-radius: 24px;
+    padding: 24px 20px;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 20px;
+    position: relative;
+    animation: cardSway 4s ease-in-out infinite;
+}
+
+@keyframes cardSway {
+    0%, 100% { transform: rotate(-0.5deg); }
+    50% { transform: rotate(0.5deg); }
+}
+
+.card.shaking {
+    animation: cardShake 600ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes cardShake {
+    0%, 100% { transform: translate(0, 0) rotate(0); }
+    10% { transform: translate(-8px, -4px) rotate(-2deg); }
+    20% { transform: translate(8px, 4px) rotate(2deg); }
+    30% { transform: translate(-6px, 4px) rotate(-1deg); }
+    40% { transform: translate(6px, -4px) rotate(1deg); }
+    50% { transform: translate(-4px, 2px) rotate(-1deg); }
+    60% { transform: translate(4px, -2px) rotate(1deg); }
+    70% { transform: translate(-2px, 4px) rotate(0); }
+    80% { transform: translate(2px, -4px) rotate(0); }
+    90% { transform: translate(-2px, 2px) rotate(0); }
+}
+
+/* 角落小贴纸 */
+.card::before {
+    content: '✨';
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    font-size: 32px;
+    animation: stickerSpin 6s linear infinite;
+}
+
+.card::after {
+    content: '🎀';
+    position: absolute;
+    bottom: -12px;
+    left: -12px;
+    font-size: 28px;
+    animation: stickerBounce 2s ease-in-out infinite;
+}
+
+@keyframes stickerSpin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes stickerBounce {
+    0%, 100% { transform: translateY(0) rotate(-10deg); }
+    50% { transform: translateY(-8px) rotate(10deg); }
+}
+
+/* ============ 角色头像 ============ */
+.avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 3px dashed var(--ink);
+}
+
+.avatar {
+    width: 80px;
+    height: 80px;
+    background: var(--yellow);
+    border: 4px solid var(--ink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+    animation: avatarBlink 4s ease-in-out infinite;
+    transition: transform 200ms;
+    cursor: pointer;
+}
+
+.avatar:hover {
+    transform: scale(1.1) rotate(10deg);
+}
+
+@keyframes avatarBlink {
+    0%, 90%, 100% { transform: scale(1); }
+    93% { transform: scale(1, 0.1); }
+    96% { transform: scale(1, 1); }
+}
+
+.avatar.happy { background: var(--green); }
+.avatar.sad { background: #B0BEC5; }
+.avatar.shocked { background: var(--pink); }
+.avatar.legendary { 
+    background: linear-gradient(135deg, var(--yellow), var(--orange), var(--pink));
+    animation: avatarRainbow 1s ease-in-out infinite;
+}
+
+@keyframes avatarRainbow {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.15) rotate(10deg); }
+}
+
+.name-area {
+    flex: 1;
+}
+
+.name-label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.name-input {
+    flex: 1;
+    background: var(--bg);
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 22px;
+    font-weight: 700;
+    font-family: inherit;
+    color: var(--ink);
+    outline: none;
+    box-shadow: var(--shadow-sm);
+    transition: all 200ms;
+}
+
+.name-input:focus {
+    background: var(--yellow);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--ink);
+}
+
+.gender-toggle {
+    width: 44px;
+    height: 44px;
+    background: var(--pink);
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 200ms cubic-bezier(0.34, 1.8, 0.64, 1);
+}
+
+.gender-toggle:hover {
+    transform: translate(-1px, -1px) rotate(-5deg);
+    box-shadow: 3px 3px 0 var(--ink);
+}
+
+.gender-toggle:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 var(--ink);
+}
+
+.dice-mini {
+    width: 44px;
+    height: 44px;
+    background: var(--mint);
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 300ms;
+}
+
+.dice-mini:hover {
+    transform: rotate(360deg);
+    background: var(--yellow);
+}
+
+.dice-mini:active {
+    transform: scale(0.9) rotate(360deg);
+}
+
+/* ============ 区块标题 ============ */
+.section-title {
+    text-align: center;
+    margin: 20px 0 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.section-title span {
+    background: var(--yellow);
+    border: 3px solid var(--ink);
+    padding: 4px 16px;
+    border-radius: 24px;
+    box-shadow: var(--shadow-sm);
+    display: inline-block;
+    transform: rotate(-2deg);
+}
+
+.section-title:nth-of-type(2) span { 
+    background: var(--mint); 
+    transform: rotate(2deg);
+}
+.section-title:nth-of-type(3) span { 
+    background: var(--pink); 
+    transform: rotate(-1deg);
+}
+.section-title:nth-of-type(4) span { 
+    background: var(--purple); 
+    transform: rotate(1deg);
+    color: white;
+}
+
+/* ============ 出生信息 ============ */
+.info-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg);
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    padding: 10px 14px;
+    box-shadow: var(--shadow-sm);
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 200ms;
+}
+
+.info-row:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--ink);
+}
+
+.info-row:nth-child(1) { background: #FFE0E0; }
+.info-row:nth-child(2) { background: #E0F4FF; }
+.info-row:nth-child(3) { background: #E8F5E9; }
+
+.info-icon {
+    font-size: 22px;
+}
+
+.info-label {
+    color: #666;
+    width: 50px;
+}
+
+.info-value {
+    color: var(--ink);
+    flex: 1;
+    font-weight: 900;
+    transition: all 300ms;
+}
+
+/* ============ 属性条 ============ */
+.attr-list {
+    display: grid;
+    gap: 12px;
+}
+
+.attr-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.attr-emoji {
+    font-size: 24px;
+    width: 32px;
+    text-align: center;
+}
+
+.attr-name {
+    width: 36px;
+    font-size: 14px;
+    color: #666;
+    font-weight: 700;
+}
+
+.attr-bar {
+    flex: 1;
+    height: 18px;
+    background: var(--bg);
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,0.1);
+}
+
+.attr-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 1000ms cubic-bezier(0.34, 1.8, 0.64, 1);
+    position: relative;
+    background: var(--green);
+}
+
+.attr-fill[data-attr="appearance"] { background: var(--pink); }
+.attr-fill[data-attr="intelligence"] { background: var(--blue); }
+.attr-fill[data-attr="constitution"] { background: var(--green); }
+.attr-fill[data-attr="wealth"] { background: var(--yellow); }
+.attr-fill[data-attr="eq"] { background: var(--purple); }
+
+/* 进度条波纹 */
+.attr-fill::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+}
+
+.attr-value {
+    width: 44px;
+    text-align: center;
+    background: var(--ink);
+    color: white;
+    border-radius: 10px;
+    padding: 4px 8px;
+    font-size: 16px;
+    font-weight: 900;
+    font-family: 'Fredoka', sans-serif;
+    transition: all 300ms;
+}
+
+.attr-value.tier-0 { background: #95A5A6; }
+.attr-value.tier-1 { background: #7F8C8D; }
+.attr-value.tier-2 { background: var(--ink); }
+.attr-value.tier-3 { background: var(--orange); }
+.attr-value.tier-4 { 
+    background: var(--pink);
+    animation: valueBounce 0.6s cubic-bezier(0.34, 1.8, 0.64, 1) infinite;
+}
+.attr-value.tier-5 { 
+    background: linear-gradient(135deg, var(--yellow), var(--pink), var(--purple));
+    animation: valueRainbow 1s linear infinite;
+}
+
+@keyframes valueBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+@keyframes valueRainbow {
+    0%, 100% { transform: scale(1) rotate(-3deg); }
+    50% { transform: scale(1.2) rotate(3deg); }
+}
+
+/* ============ 隐藏属性 ============ */
+.hidden-attrs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    background: #FFF3E0;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
+}
+
+.hidden-attr {
+    background: white;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 200ms;
+}
+
+.hidden-attr:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 2px 2px 0 var(--ink);
+}
+
+.hidden-attr-name {
+    font-size: 13px;
+    color: #666;
+    font-weight: 700;
+}
+
+.hidden-attr-emoji {
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+.hidden-attr-value {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+}
+
+/* ============ 天赋 ============ */
+.talents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    min-height: 50px;
+    padding: 10px 0;
+}
+
+.talent {
+    padding: 8px 16px;
+    border: 3px solid var(--ink);
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 900;
+    background: white;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: all 200ms;
+    position: relative;
+    animation: talentPopIn 600ms cubic-bezier(0.34, 1.8, 0.64, 1) both;
+    font-family: inherit;
+}
+
+@keyframes talentPopIn {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(-180deg);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.3) rotate(10deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.talent:hover {
+    transform: translate(-1px, -1px) scale(1.1) rotate(-3deg);
+    box-shadow: 3px 3px 0 var(--ink);
+    z-index: 5;
+}
+
+.talent.normal { background: white; }
+.talent.rare { 
+    background: var(--mint); 
+    color: var(--ink);
+}
+.talent.epic { 
+    background: var(--purple); 
+    color: white;
+    animation: 
+        talentPopIn 600ms cubic-bezier(0.34, 1.8, 0.64, 1) both,
+        epicWobble 2s ease-in-out infinite 600ms;
+}
+@keyframes epicWobble {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+}
+
+.talent.legendary { 
+    background: linear-gradient(135deg, var(--yellow), var(--orange));
+    color: var(--ink);
+    border-color: var(--ink);
+    box-shadow: 4px 4px 0 var(--ink), 0 0 20px var(--yellow);
+    animation: 
+        talentPopIn 600ms cubic-bezier(0.34, 1.8, 0.64, 1) both,
+        legendaryDance 1.2s ease-in-out infinite 600ms;
+    font-weight: 900;
+}
+
+@keyframes legendaryDance {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    25% { transform: rotate(0deg) scale(1.1); }
+    50% { transform: rotate(5deg) scale(1); }
+    75% { transform: rotate(0deg) scale(1.1); }
+}
+
+.talent.negative { 
+    background: var(--red); 
+    color: white;
+    animation: 
+        talentPopIn 600ms cubic-bezier(0.34, 1.8, 0.64, 1) both,
+        negativeShake 0.4s ease-in-out infinite 600ms;
+}
+
+@keyframes negativeShake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    25% { transform: translateX(-2px) rotate(-2deg); }
+    75% { transform: translateX(2px) rotate(2deg); }
+}
+
+/* ============ 命运评级 ============ */
+.rating-section {
+    text-align: center;
+    margin-top: 20px;
+    padding: 20px 16px;
+    background: var(--bg);
+    border: 4px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+    transition: all 400ms;
+}
+
+.rating-label {
+    font-size: 14px;
+    color: var(--ink);
+    margin-bottom: 8px;
+    font-weight: 900;
+}
+
+.rating-grade {
+    font-family: 'Fredoka', 'ZCOOL KuaiLe', sans-serif;
+    font-size: 80px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--ink);
+    -webkit-text-stroke: 4px var(--ink);
+    margin: 4px 0 8px;
+    transition: all 500ms;
+    display: inline-block;
+}
+
+.rating-grade.grade-F { 
+    color: #95A5A6;
+    text-shadow: 4px 4px 0 var(--ink);
+}
+.rating-grade.grade-D { 
+    color: #7F8C8D;
+    text-shadow: 4px 4px 0 var(--ink);
+}
+.rating-grade.grade-C { 
+    color: var(--mint);
+    text-shadow: 4px 4px 0 var(--ink);
+}
+.rating-grade.grade-B { 
+    color: var(--green);
+    text-shadow: 4px 4px 0 var(--ink);
+}
+.rating-grade.grade-A { 
+    color: var(--orange);
+    text-shadow: 4px 4px 0 var(--ink);
+    animation: gradeBounce 0.8s cubic-bezier(0.34, 1.8, 0.64, 1) infinite;
+}
+.rating-grade.grade-S { 
+    color: var(--pink);
+    text-shadow: 4px 4px 0 var(--ink);
+    animation: gradeBounce 0.6s cubic-bezier(0.34, 1.8, 0.64, 1) infinite;
+}
+.rating-grade.grade-SSR { 
+    background: linear-gradient(135deg, var(--yellow), var(--pink), var(--purple), var(--blue));
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 3px var(--ink);
+    animation: 
+        ssrRainbow 2s linear infinite,
+        gradeBounce 0.5s cubic-bezier(0.34, 1.8, 0.64, 1) infinite;
+}
+
+@keyframes gradeBounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-8px) scale(1.05); }
+}
+
+@keyframes ssrRainbow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.rating-desc {
+    font-size: 14px;
+    color: var(--ink);
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    padding: 6px 16px;
+    display: inline-block;
+    margin-top: 8px;
+    box-shadow: var(--shadow-sm);
+    transform: rotate(-2deg);
+    font-weight: 700;
+}
+
+/* ============ 按钮 ============ */
+.btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 12px;
+}
+
+.btn {
+    padding: 16px 20px;
+    border: 4px solid var(--ink);
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: 900;
+    font-family: 'ZCOOL KuaiLe', inherit;
+    cursor: pointer;
+    transition: all 200ms cubic-bezier(0.34, 1.8, 0.64, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 4px;
+    box-shadow: var(--shadow);
+    position: relative;
+    color: var(--ink);
+}
+
+.btn-icon {
+    font-size: 22px;
+    display: inline-block;
+    animation: iconWiggle 2s ease-in-out infinite;
+}
+
+@keyframes iconWiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-15deg); }
+    75% { transform: rotate(15deg); }
+}
+
+.btn-secondary {
+    background: var(--mint);
+}
+
+.btn-secondary:hover {
+    background: var(--yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--ink);
+}
+
+.btn-secondary:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 var(--ink);
+}
+
+.btn-primary {
+    background: var(--red);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--pink);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--ink);
+}
+
+.btn-primary:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 var(--ink);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ============ 吐槽气泡 ============ */
+.bubble {
+    position: fixed;
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    box-shadow: var(--shadow);
+    z-index: 1500;
+    pointer-events: none;
+    opacity: 0;
+    max-width: 280px;
+    text-align: center;
+    transition: opacity 200ms;
+}
+
+.bubble.show {
+    animation: bubbleIn 1.5s ease-out;
+}
+
+@keyframes bubbleIn {
+    0% { 
+        opacity: 0; 
+        transform: translate(-50%, 30px) scale(0.5); 
+    }
+    20% { 
+        opacity: 1; 
+        transform: translate(-50%, 0) scale(1.1); 
+    }
+    30% { 
+        transform: translate(-50%, 0) scale(1); 
+    }
+    80% { 
+        opacity: 1; 
+        transform: translate(-50%, 0) scale(1); 
+    }
+    100% { 
+        opacity: 0; 
+        transform: translate(-50%, -20px) scale(0.9); 
+    }
+}
+
+.bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid var(--ink);
+}
+
+.bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid white;
+    z-index: 1;
+}
+
+/* ============ 粒子 ============ */
+.particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.particle {
+    position: absolute;
+    pointer-events: none;
+    font-size: 24px;
+    line-height: 1;
+}
+
+/* ============ 屏幕震动 ============ */
+.screen-shake {
+    animation: bigShake 500ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes bigShake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-10px, -5px); }
+    40% { transform: translate(10px, 5px); }
+    60% { transform: translate(-8px, 3px); }
+    80% { transform: translate(8px, -3px); }
+}
+
+/* ============ Toast ============ */
+.toast {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px) rotate(-3deg);
+    background: var(--yellow);
+    color: var(--ink);
+    padding: 14px 24px;
+    border: 4px solid var(--ink);
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 900;
+    z-index: 2000;
+    transition: transform 500ms cubic-bezier(0.34, 1.8, 0.64, 1);
+    box-shadow: var(--shadow);
+    letter-spacing: 2px;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0) rotate(-3deg);
+}
+
+/* ============ 游戏界面 ============ */
+.game-container { display:none; width:100%; max-width:480px; position:relative; z-index:10; }
+.game-container.active { display:block; animation:containerPop 800ms cubic-bezier(0.34,1.8,0.64,1); }
+
+.game-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.game-age { font-size:32px; font-weight:900; font-family:'Fredoka','ZCOOL KuaiLe',sans-serif; color:var(--ink); white-space:nowrap; }
+.game-progress { flex:1; }
+.game-bar-bg { height:8px; background:var(--card); border:3px solid var(--ink); border-radius:6px; overflow:hidden; }
+.game-bar-fill { height:100%; background:var(--pink); border-radius:3px; transition:width 0.5s ease; }
+.game-year { font-family:'Fredoka',sans-serif; font-size:13px; color:var(--ink); font-weight:700; white-space:nowrap; }
+
+.game-event-card {
+  background:var(--card); border:4px solid var(--ink); border-radius:20px;
+  padding:18px; margin-bottom:14px; box-shadow:var(--shadow);
+  min-height:80px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.game-event-text { font-size:15px; line-height:1.8; text-align:center; font-weight:700; }
+.game-event-source { font-size:11px; color:#999; margin-top:4px; }
+
+.game-choices { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+.choice-btn {
+  padding:12px 16px; border:3px solid var(--ink); background:var(--card);
+  border-radius:14px; font-size:15px; font-weight:700; cursor:pointer;
+  transition:all 200ms; text-align:left; font-family:inherit; box-shadow:var(--shadow-sm);
+}
+.choice-btn:hover:not(:disabled) { transform:translate(-2px,-2px); box-shadow:4px 4px 0 var(--ink); background:var(--yellow); }
+.choice-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+#custom-area { display:none; margin-bottom:12px; }
+#custom-area .cl { font-size:12px; color:#888; text-align:center; margin-bottom:4px; font-weight:700; }
+#custom-input {
+  width:100%; padding:10px 14px; border:3px solid var(--ink);
+  border-radius:12px; font-size:14px; font-family:inherit;
+  resize:none; min-height:50px; background:var(--card); font-weight:700;
+}
+#custom-input:focus { outline:none; background:var(--yellow); }
+#custom-submit {
+  width:100%; padding:10px; background:var(--card); border:3px dashed var(--ink);
+  border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px; font-family:inherit;
+  transition:all 200ms;
+}
+#custom-submit:hover { background:var(--mint); }
+
+.game-result {
+  display:none; background:#E8F5E9; border:3px solid var(--green);
+  border-radius:14px; padding:12px 14px; text-align:center;
+  font-size:14px; font-weight:700; margin-bottom:12px; line-height:1.6;
+}
+.game-result .gr-eff { font-size:12px; color:var(--ink); margin-top:4px; }
+
+.next-btn {
+  width:100%; padding:14px; font-size:18px; font-weight:900;
+  border:4px solid var(--ink); border-radius:16px; cursor:pointer;
+  background:var(--red); color:white; font-family:'ZCOOL KuaiLe',inherit;
+  letter-spacing:2px; box-shadow:var(--shadow); transition:all 200ms;
+  display:none;
+}
+.next-btn:hover:not(:disabled) { transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink); }
+.next-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* Game attribute bars */
+.game-attrs { margin-top:12px; background:var(--card); border:3px solid var(--ink); border-radius:16px; padding:12px; box-shadow:var(--shadow-sm); }
+.game-attrs .ga-row { display:flex; align-items:center; gap:8px; margin-bottom:2px; }
+.game-attrs .ga-label { font-size:12px; color:#888; width:24px; text-align:right; font-weight:700; }
+.game-attrs .ga-bar-bg { flex:1; height:6px; background:var(--bg); border-radius:3px; overflow:hidden; }
+.game-attrs .ga-bar-fill { height:100%; border-radius:3px; transition:width 0.4s ease; }
+.game-attrs .ga-val { font-size:12px; font-weight:700; width:26px; text-align:center; font-family:'Fredoka',sans-serif; }
+
+/* Hidden attrs toggle */
+#ga-hidden-toggle { font-size:12px; color:#888; cursor:pointer; text-align:center; margin-top:4px; font-weight:700; }
+#ga-hidden-toggle:hover { color:var(--ink); }
+#ga-hidden-attrs { display:none; margin-top:4px; padding:8px; background:var(--bg); border-radius:10px; border:2px solid var(--ink); }
+#ga-hidden-attrs.show { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+.gha-item { font-size:12px; padding:2px 10px; background:var(--card); border-radius:8px; border:2px solid var(--ink); font-weight:700; }
+
+/* Dialogue Screen */
+.dlg-container { display:none; width:100%; max-width:480px; position:relative; z-index:10; }
+.dlg-container.active { display:block; animation:containerPop 800ms cubic-bezier(0.34,1.8,0.64,1); }
+.dlg-header { text-align:center; margin-bottom:12px; }
+.dlg-npc-icon { font-size:48px; margin-bottom:2px; }
+.dlg-npc-name { font-size:18px; font-weight:900; }
+.dlg-npc-desc { font-size:13px; color:#888; margin-top:2px; font-weight:700; }
+.dlg-chat { background:var(--card); border:4px solid var(--ink); border-radius:20px; padding:12px 14px; min-height:180px; margin-bottom:12px; max-height:300px; overflow-y:auto; box-shadow:var(--shadow-sm); }
+.dlg-msg { margin-bottom:8px; display:flex; }
+.dlg-msg.npc { justify-content:flex-start; }
+.dlg-msg.player { justify-content:flex-end; }
+.dlg-msg .bubble { max-width:80%; padding:8px 14px; border-radius:12px; font-size:14px; line-height:1.5; word-break:break-word; font-weight:700; border:3px solid var(--ink); opacity:1; position:relative; }
+.dlg-msg.npc .bubble { background:var(--bg); color:var(--ink); border-bottom-left-radius:2px; }
+.dlg-msg.player .bubble { background:var(--pink); color:var(--ink); border-bottom-right-radius:2px; }
+.dlg-input-area { display:flex; gap:6px; }
+#dlg-input { flex:1; padding:10px 14px; border:3px solid var(--ink); border-radius:12px; font-size:14px; font-family:inherit; font-weight:700; background:var(--card); }
+#dlg-input:focus { outline:none; background:var(--yellow); }
+#dlg-send { padding:10px 20px; background:var(--red); border:3px solid var(--ink); border-radius:12px; font-size:14px; font-weight:900; cursor:pointer; font-family:inherit; color:white; box-shadow:var(--shadow-sm); }
+#dlg-send:hover { transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--ink); }
+#dlg-send:disabled { opacity:0.5; cursor:not-allowed; }
+#dlg-score { display:none; text-align:center; padding:12px; background:#FFF3E0; border:3px solid var(--ink); border-radius:14px; margin-top:8px; }
+#dlg-score .ds-title { font-size:15px; font-weight:900; }
+#dlg-score .ds-desc { font-size:13px; color:#888; margin-top:3px; }
+#dlg-next-btn { display:none; margin-top:10px; width:100%; }
+
+/* Ending Screen */
+.end-container { display:none; width:100%; max-width:480px; position:relative; z-index:10; }
+.end-container.active { display:block; animation:containerPop 800ms cubic-bezier(0.34,1.8,0.64,1); }
+.end-container .card { padding:20px; }
+.end-icon { font-size:48px; text-align:center; margin-bottom:4px; }
+.end-grade { font-family:'Fredoka','ZCOOL KuaiLe',sans-serif; font-size:72px; font-weight:900; text-align:center; -webkit-text-stroke:4px var(--ink); margin:4px 0; display:block; }
+.end-grade.grade-SSS { color:var(--gold); text-shadow:4px 4px 0 var(--ink); animation:gradeBounce 0.5s cubic-bezier(0.34,1.8,0.64,1) infinite; }
+.end-grade.grade-S { color:var(--pink); text-shadow:4px 4px 0 var(--ink); }
+.end-grade.grade-A { color:var(--orange); text-shadow:4px 4px 0 var(--ink); }
+.end-grade.grade-B { color:var(--green); text-shadow:4px 4px 0 var(--ink); }
+.end-grade.grade-C { color:var(--mint); text-shadow:4px 4px 0 var(--ink); }
+.end-grade.grade-D { color:#7F8C8D; text-shadow:4px 4px 0 var(--ink); }
+.end-grade.grade-F { color:#95A5A6; text-shadow:4px 4px 0 var(--ink); }
+.end-title { font-size:24px; font-weight:900; text-align:center; }
+.end-desc { font-size:14px; color:#888; text-align:center; margin:6px 0 12px; font-weight:700; line-height:1.6; }
+.end-detail { font-size:13px; color:#666; text-align:center; line-height:1.8; font-weight:700; }
+.end-tags { margin:10px 0; display:flex; flex-wrap:wrap; gap:5px; justify-content:center; }
+.etag { padding:4px 12px; background:var(--card); border:2px solid var(--ink); border-radius:14px; font-size:12px; font-weight:700; }
+.end-history { margin:10px 0; max-height:140px; overflow-y:auto; font-size:12px; font-weight:700; text-align:left; border-top:3px dashed var(--ink); padding-top:8px; }
+.end-history .eh-item { padding:3px 0; }
+.end-history .eh-age { color:var(--pink); font-weight:900; }
+
+/* 错误 */
+.error-box { background:#FFE0E0; border:3px solid var(--red); border-radius:14px; padding:10px 14px; text-align:center; font-size:13px; font-weight:700; margin:8px 0; }
+.retry-btn { background:var(--red); color:white; border:3px solid var(--ink); border-radius:10px; padding:6px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:4px; }
+
+/* ============ 响应式 ============ */
+@media (max-width: 480px) {
+    .title { font-size: 42px; letter-spacing: 4px; }
+    .card { padding: 20px 14px; }
+    .rating-grade { font-size: 60px; }
+    .avatar { width: 64px; height: 64px; font-size: 36px; }
+}
+</style>
 </head>
 <body>
 
-<div id="game-box">
-    <h1>🎮 人生模拟器</h1>
-    <div class="subtitle">简化版 · 点击选项，过完一生</div>
+<!-- 漂浮装饰 -->
+<div class="floating-deco" id="floatingDeco"></div>
 
-    <div id="game-page">
-        <div id="age-display">年龄: 0 岁</div>
-        <div id="event-card">你出生了，伴随着一声啼哭来到这个世界。</div>
-        <div id="result-card"></div>
-        <div id="choices-box"></div>
+<!-- 粒子 -->
+<div class="particles" id="particles"></div>
 
-        <div id="attrs-box">
-            <div class="attr-row">
-                <span class="attr-label">智力</span>
-                <div class="attr-bar-bg"><div class="attr-bar-fill" id="bar-int" style="width:50%;background:#3498db"></div></div>
-                <span class="attr-value" id="val-int">50</span>
-            </div>
-            <div class="attr-row">
-                <span class="attr-label">体质</span>
-                <div class="attr-bar-bg"><div class="attr-bar-fill" id="bar-str" style="width:50%;background:#2ecc71"></div></div>
-                <span class="attr-value" id="val-str">50</span>
-            </div>
-            <div class="attr-row">
-                <span class="attr-label">财富</span>
-                <div class="attr-bar-bg"><div class="attr-bar-fill" id="bar-mny" style="width:50%;background:#f39c12"></div></div>
-                <span class="attr-value" id="val-mny">50</span>
-            </div>
-            <div class="attr-row">
-                <span class="attr-label">快乐</span>
-                <div class="attr-bar-bg"><div class="attr-bar-fill" id="bar-hap" style="width:50%;background:#e74c3c"></div></div>
-                <span class="attr-value" id="val-hap">50</span>
+<!-- 吐槽气泡 -->
+<div class="bubble" id="bubble"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="container" id="container">
+    <!-- 标题 -->
+    <div class="header">
+        <h1 class="title">
+            <span class="title-emoji">🎲</span>人间重开<span class="title-emoji">🎮</span>
+        </h1>
+        <div class="subtitle">✨ 创建你的搞笑人生 ✨</div>
+    </div>
+
+    <!-- 主卡片 -->
+    <div class="card" id="mainCard">
+        
+        <!-- 头像 + 姓名 -->
+        <div class="avatar-section">
+            <div class="avatar" id="avatar">😊</div>
+            <div class="name-area">
+                <div class="name-label">叫我什么好呢？</div>
+                <div class="name-row">
+                    <input type="text" class="name-input" id="nameInput" value="陈子安">
+                    <button class="gender-toggle" id="genderToggle">♂</button>
+                    <button class="dice-mini" id="randomNameBtn">🎲</button>
+                </div>
             </div>
         </div>
 
-        <button id="next-btn" class="btn btn-primary" onclick="nextYear()">下一年</button>
+        <!-- 出生信息 -->
+        <div class="section-title"><span>🌍 我从哪儿来 🌍</span></div>
+        <div class="info-grid">
+            <div class="info-row">
+                <div class="info-icon">📍</div>
+                <div class="info-label">出生地</div>
+                <div class="info-value" id="locationVal">三线城市</div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon">🏠</div>
+                <div class="info-label">家庭</div>
+                <div class="info-value" id="familyVal">普通工薪家庭</div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon">📅</div>
+                <div class="info-label">年代</div>
+                <div class="info-value" id="yearVal">2000年</div>
+            </div>
+        </div>
+
+        <!-- 基础属性 -->
+        <div class="section-title"><span>📊 我的资质 📊</span></div>
+        <div class="attr-list">
+            <div class="attr-row">
+                <span class="attr-emoji">😎</span>
+                <span class="attr-name">颜值</span>
+                <div class="attr-bar"><div class="attr-fill" data-attr="appearance" style="width:61%"></div></div>
+                <span class="attr-value tier-3" data-val="appearance">61</span>
+            </div>
+            <div class="attr-row">
+                <span class="attr-emoji">🧠</span>
+                <span class="attr-name">智力</span>
+                <div class="attr-bar"><div class="attr-fill" data-attr="intelligence" style="width:67%"></div></div>
+                <span class="attr-value tier-3" data-val="intelligence">67</span>
+            </div>
+            <div class="attr-row">
+                <span class="attr-emoji">💪</span>
+                <span class="attr-name">体质</span>
+                <div class="attr-bar"><div class="attr-fill" data-attr="constitution" style="width:23%"></div></div>
+                <span class="attr-value tier-1" data-val="constitution">23</span>
+            </div>
+            <div class="attr-row">
+                <span class="attr-emoji">💰</span>
+                <span class="attr-name">家境</span>
+                <div class="attr-bar"><div class="attr-fill" data-attr="wealth" style="width:46%"></div></div>
+                <span class="attr-value tier-2" data-val="wealth">46</span>
+            </div>
+            <div class="attr-row">
+                <span class="attr-emoji">💖</span>
+                <span class="attr-name">情商</span>
+                <div class="attr-bar"><div class="attr-fill" data-attr="eq" style="width:58%"></div></div>
+                <span class="attr-value tier-2" data-val="eq">58</span>
+            </div>
+        </div>
+
+        <!-- 隐藏属性 -->
+        <div class="section-title"><span>🎭 隐藏性格 🎭</span></div>
+        <div class="hidden-attrs">
+            <div class="hidden-attr">
+                <span><span class="hidden-attr-emoji">🔥</span><span class="hidden-attr-name">意志</span></span>
+                <span class="hidden-attr-value" data-hidden="willpower">63</span>
+            </div>
+            <div class="hidden-attr">
+                <span><span class="hidden-attr-emoji">🍀</span><span class="hidden-attr-name">运气</span></span>
+                <span class="hidden-attr-value" data-hidden="luck">91</span>
+            </div>
+            <div class="hidden-attr">
+                <span><span class="hidden-attr-emoji">⚡</span><span class="hidden-attr-name">野心</span></span>
+                <span class="hidden-attr-value" data-hidden="ambition">17</span>
+            </div>
+            <div class="hidden-attr">
+                <span><span class="hidden-attr-emoji">📖</span><span class="hidden-attr-name">阅历</span></span>
+                <span class="hidden-attr-value" data-hidden="experience">41</span>
+            </div>
+        </div>
+
+        <!-- 特殊天赋 -->
+        <div class="section-title"><span>✨ 我的天赋 ✨</span></div>
+        <div class="talents" id="talentsBox">
+            <span class="talent rare">小镇做题家</span>
+            <span class="talent negative">社恐</span>
+            <span class="talent normal">乐天派</span>
+        </div>
+
+        <!-- 评级 -->
+        <div class="rating-section" id="ratingSection">
+            <div class="rating-label">🌟 命运评级 🌟</div>
+            <div class="rating-grade grade-B" id="ratingGrade">B</div>
+            <div class="rating-desc" id="ratingDesc">还行还行，凑合过吧～</div>
+        </div>
     </div>
 
-    <div id="ending-page">
-        <div class="ending-icon" id="ending-icon">🏁</div>
-        <div class="ending-title" id="ending-title">人生落幕</div>
-        <div class="ending-desc" id="ending-desc"></div>
-        <div id="ending-stats"></div>
-        <button class="btn btn-primary" onclick="resetGame()" style="margin-top:10px">重新开始</button>
+    <!-- 按钮 -->
+    <div class="btn-group">
+        <button class="btn btn-secondary" id="rerollBtn">
+            <span class="btn-icon">🎲</span>
+            <span>再来！</span>
+        </button>
+        <button class="btn btn-primary" id="startBtn">
+            <span class="btn-icon">🚀</span>
+            <span>开始人生</span>
+        </button>
+    </div>
+</div>
+
+<!-- ===== 游戏界面 ===== -->
+<div class="game-container" id="gameContainer">
+    <div class="game-header">
+        <div class="game-age" id="gameAge">0 岁</div>
+        <div class="game-progress"><div class="game-bar-bg"><div class="game-bar-fill" id="lifeBar" style="width:0%"></div></div></div>
+        <div class="game-year" id="yearCount">0 / 80</div>
+    </div>
+    <div class="game-event-card">
+        <div class="game-event-text" id="eventText">命运正在编织...</div>
+        <div class="game-event-source" id="eventSource"></div>
+    </div>
+    <div class="error-box" id="errorBox" style="display:none;"></div>
+    <div class="game-choices" id="gameChoices"></div>
+    <div id="custom-area">
+        <div class="cl">— 或自定义行动 —</div>
+        <textarea id="custom-input" placeholder="输入你想做的事..." maxlength="200"></textarea>
+        <button id="custom-submit">提交自定义行动</button>
+    </div>
+    <div class="game-result" id="gameResult">
+        <div id="resultText"></div>
+        <div class="gr-eff" id="resultEffects"></div>
+    </div>
+    <button class="next-btn" id="nextYearBtn">下一年 →</button>
+    <div class="game-attrs" id="gameAttrs"></div>
+    <div id="ga-hidden-toggle" onclick="toggleGameHidden()">▼ 展开隐藏属性</div>
+    <div id="ga-hidden-attrs"></div>
+</div>
+<!-- ===== 对话界面 ===== -->
+<div class="dlg-container" id="dlgContainer">
+    <div class="dlg-header">
+        <div class="dlg-npc-icon" id="dlgNpcIcon">👤</div>
+        <div class="dlg-npc-name" id="dlgNpcName">NPC</div>
+        <div class="dlg-npc-desc" id="dlgNpcDesc"></div>
+    </div>
+    <div class="dlg-chat" id="dlgChat"></div>
+    <div class="dlg-input-area">
+        <input id="dlg-input" type="text" placeholder="输入你的回答..." maxlength="200">
+        <button id="dlg-send">发送</button>
+    </div>
+    <div id="dlg-score">
+        <div class="ds-title" id="dlgScoreTitle"></div>
+        <div class="ds-desc" id="dlgScoreDesc"></div>
+    </div>
+    <button class="next-btn" id="dlgNextBtn" style="display:none;">继续人生</button>
+</div>
+<!-- ===== 结局界面 ===== -->
+<div class="end-container" id="endContainer">
+    <div class="card" style="padding:20px;">
+        <div class="end-icon" id="endIcon">🏁</div>
+        <div class="end-grade" id="endGrade">B</div>
+        <div class="end-title" id="endTitle">人生落幕</div>
+        <div class="end-desc" id="endDesc"></div>
+        <div class="end-detail" id="endDetail"></div>
+        <div class="end-tags" id="endTags"></div>
+        <div class="end-history" id="endHistory"></div>
+        <button class="next-btn" onclick="resetGame()" style="display:block;margin-top:10px;">重新开始</button>
     </div>
 </div>
 
 <script>
-    let player = { age: 0, alive: true, int: 50, str: 50, mny: 50, hap: 50, waitingChoice: false };
+// ============ 漂浮装饰 ============
+const floatEmojis = ['⭐','💫','🌙','☁️','🎈','🍭','🌸','🍬','💖','🎀','🌟','✨'];
+const decoBox = document.getElementById('floatingDeco');
+for (let i = 0; i < 15; i++) {
+    const item = document.createElement('div');
+    item.className = 'float-item';
+    item.textContent = floatEmojis[Math.floor(Math.random()*floatEmojis.length)];
+    item.style.left = Math.random()*100 + '%';
+    item.style.fontSize = (20 + Math.random()*30) + 'px';
+    item.style.animationDuration = (15 + Math.random()*15) + 's';
+    item.style.animationDelay = -Math.random()*20 + 's';
+    decoBox.appendChild(item);
+}
 
-    const events = [
-        { age: 0, text: "你出生了，伴随着一声啼哭来到这个世界。" },
-        { age: 6, text: "你上小学了，老师夸你聪明伶俐。", effect: { int: 3 } },
-        { age: 12, text: "班上调皮的同学想抢你的午饭钱...", choices: [
-            { text: "🛡️ 反抗（可能受伤）", effect: { str: 8, hap: -5 }, result: "你虽然挨了一拳，但保住了尊严，身体也更结实了。" },
-            { text: "🏃 告诉老师", effect: { int: 5, hap: 3 }, result: "老师批评了那个同学，你安心吃了午饭。" }
-        ]},
-        { age: 15, text: "中考在即，你面临人生第一次重要选择...", choices: [
-            { text: "📚 拼命学习", effect: { int: 12, str: -5, hap: -5 }, result: "你考上了重点高中，但熬夜太多，身体累坏了。" },
-            { text: "🎮 顺其自然", effect: { int: -5, hap: 10 }, result: "你轻松度过了初中，但成绩一般，去了普通高中。" }
-        ]},
-        { age: 18, text: "高考结束，填报志愿时家人希望你学师范...", choices: [
-            { text: "💻 坚持计算机", effect: { int: 8, mny: 5, hap: 5 }, result: "你选择了热爱的专业，虽然辛苦但很充实。" },
-            { text: "📖 听从家人学师范", effect: { int: 3, hap: -5, mny: 2 }, result: "你听从了安排，但心里总有些不甘。" }
-        ]},
-        { age: 22, text: "大学毕业，你拿到了两份 offer...", choices: [
-            { text: "🏢 去大厂卷", effect: { mny: 15, hap: -5, str: -5 }, result: "高薪但 996，头发开始变少了。" },
-            { text: "🏛️ 考公务员", effect: { mny: 5, hap: 5, str: 5 }, result: "工作稳定，朝九晚五，但薪资一般。" }
-        ]},
-        { age: 28, text: "家里安排你去相亲，对面坐着一位看起来很温柔的姑娘...", choices: [
-            { text: "😊 热情主动，聊聊爱好", effect: { hap: 12, mny: -3 }, result: "你们聊得很开心，对方愿意继续交往。" },
-            { text: "😶 低头玩手机，敷衍了事", effect: { hap: -8 }, result: "场面一度很尴尬，对方礼貌地结束了见面。" }
-        ]},
-        { age: 30, text: "你的孩子出生了，你成为了父亲/母亲。", effect: { hap: 5, mny: -5 } },
-        { age: 35, text: "公司效益不好，老板暗示可能要裁员...", choices: [
-            { text: "🔥 主动跳槽，寻找新机会", effect: { mny: 12, hap: 5, int: 5 }, result: "你找到了更好的平台，薪资还涨了。" },
-            { text: "😰 忍气吞声，继续熬着", effect: { mny: -5, hap: -10, str: -5 }, result: "你每天活在焦虑中，身心俱疲。" }
-        ]},
-        { age: 45, text: "手里有点积蓄，朋友推荐投资机会...", choices: [
-            { text: "🏠 买房投资", effect: { mny: 15 }, result: "几年后房价大涨，你暗自庆幸。" },
-            { text: "📈 全仓炒股", effect: { mny: -15, hap: -8 }, result: "股市暴跌，你的积蓄缩水大半。" }
-        ]},
-        { age: 60, text: "你退休了，开始享受晚年生活。", effect: { hap: 8, str: -5 } },
-        { age: 75, text: "孙子经常来看你，你觉得很满足。", effect: { hap: 5 } },
-        { age: 85, text: "你在一个阳光明媚的早晨，在睡梦中安详离世。", death: true }
-    ];
+// ============ 数据 ============
+const SURNAMES = '赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜林徐高'.split('');
+const NAMES_M = ['二狗','大壮','铁柱','发财','旺财','建国','大锤','狗剩','石头','栓柱','钢蛋','子安','明宇','浩然','宇轩','一鸣','志远','沐辰','长安'];
+const NAMES_F = ['翠花','秀莲','春花','二妞','招娣','美丽','子涵','雨桐','佳怡','梦琪','若汐','沐瑶','晚舟','知夏','南星','若兮','清浅'];
 
-    const randomEvents = [
-        "今年风平浪静，生活平淡如水。",
-        "周末和朋友聚餐，心情不错。",
-        "工作上有小突破，得到了表扬。",
-        "换季感冒了，在家休息了几天。",
-        "你学会了一道新菜，家人很喜欢。",
-        "路上捡了100块钱，运气不错。",
-        "老家亲戚来串门，热闹了一阵子。",
-        "你迷上了一部电视剧，追完了全集。"
-    ];
+const LOCATIONS = [
+    {name:'一线城市',w:15,emoji:'🏙️'},{name:'新一线城市',w:20,emoji:'🌆'},
+    {name:'二线城市',w:25,emoji:'🏘️'},{name:'三四线城市',w:25,emoji:'🏡'},
+    {name:'县城',w:10,emoji:'🌾'},{name:'偏远农村',w:5,emoji:'🌽'}
+];
 
-    function clamp(v) { return Math.max(0, Math.min(100, v)); }
+const FAMILIES = [
+    {name:'普通工薪家庭',w:30},{name:'教师家庭',w:10},{name:'公务员家庭',w:8},
+    {name:'商人家庭',w:7},{name:'医生家庭',w:6},{name:'单亲家庭',w:10},
+    {name:'贫困家庭',w:8},{name:'富豪家庭',w:2},{name:'艺术家庭',w:4},{name:'农民家庭',w:15}
+];
 
-    function applyEffect(effect) {
-        if (!effect) return;
-        for (let key in effect) {
-            if (player[key] !== undefined) player[key] = clamp(player[key] + effect[key]);
+const TALENTS = {
+    normal: ['早慧','讨喜','运动健将','能说会道','乐天派','节俭','爱看书','人缘好','抗压','动手能力强'],
+    rare: ['小镇做题家','社牛','玻璃心','卷王','早熟','反骨','锦鲤体质','钝感力','讨好型人格','孤勇者'],
+    epic: ['独行者','观察家','灵感缪斯','天生领袖','沉默的智者'],
+    legendary: ['重生者','主角光环','天选打工人','命运弃子','人间清醒','幸运儿','时代之子','大器晚成'],
+    negative: ['社恐','体弱多病','拖延症','恋爱脑','冲动消费','敏感多疑','低自尊','倒霉蛋']
+};
+
+// 搞笑文案
+const RATING_DATA = {
+    F: {
+        emoji:'😭', avatar:'sad',
+        desc:['命运给你安排了HARD模式...','开局就这？退游吧兄弟','建议重开，没救了','哥们这开局是认真的吗'],
+        bubble:['哎呀这局有点惨啊...','别灰心，谁还没个废柴开局','重开吧，留着没用']
+    },
+    D: {
+        emoji:'😅', avatar:'sad',
+        desc:['艰难求生中...','人生开局有点坎坷','命运在考验你','勉强能过，但不轻松'],
+        bubble:['这局有点难度噢～','加油吧，会变好的（也许）','重骰吧重骰吧～']
+    },
+    C: {
+        emoji:'😐', avatar:'',
+        desc:['平凡的一生','普普通通，没啥惊喜','凑合过吧','大众脸开局'],
+        bubble:['很普通的一生～','再刷一把？','凑合过吧朋友']
+    },
+    B: {
+        emoji:'😊', avatar:'happy',
+        desc:['还不错噢～','安稳人生预定','凑合凑合还行','日子能过得去'],
+        bubble:['这局挺稳的！','可以了可以了','要不就这局？']
+    },
+    A: {
+        emoji:'😎', avatar:'happy',
+        desc:['哇这局牛啊！','开局就赢一半','人生赢家预备役','起飞的节奏！'],
+        bubble:['卧槽这把可以！','别浪费这开局了！','直接开始吧！']
+    },
+    S: {
+        emoji:'🤩', avatar:'shocked',
+        desc:['天选之子降临！','这开局也太爆炸了','开局即巅峰','S级人生 GET！'],
+        bubble:['哇靠！S级！','这运气挡不住了！','别再刷了！冲！']
+    },
+    SSR: {
+        emoji:'🥳', avatar:'legendary',
+        desc:['命运垂青！SSR！','宇宙的宠儿就是你！','史诗级开局！','你是被光选中的人']
+    }
+};
+
+let state = { gender: '男', isRolling: false };
+
+// ============ 工具 ============
+function weightedPick(arr) {
+    const t = arr.reduce((s,x)=>s+x.w,0);
+    let r = Math.random()*t;
+    for (const i of arr) { r -= i.w; if (r<0) return i; }
+    return arr[0];
+}
+
+function weightedAttr() {
+    const ranges = [[1,20,10],[21,40,20],[41,60,40],[61,80,20],[81,95,8],[96,100,2]];
+    const t = ranges.reduce((s,r)=>s+r[2],0);
+    let r = Math.random()*t;
+    for (const [a,b,w] of ranges) { r -= w; if (r<0) return Math.floor(Math.random()*(b-a+1))+a; }
+    return 50;
+}
+
+function getTier(v) {
+    if (v<=20) return 0;
+    if (v<=40) return 1;
+    if (v<=60) return 2;
+    if (v<=80) return 3;
+    if (v<=95) return 4;
+    return 5;
+}
+
+function genName() {
+    const s = SURNAMES[Math.floor(Math.random()*SURNAMES.length)];
+    const pool = state.gender === '男' ? NAMES_M : NAMES_F;
+    return s + pool[Math.floor(Math.random()*pool.length)];
+}
+
+function genTalents() {
+    const r = [];
+    r.push({name: TALENTS.normal[Math.floor(Math.random()*TALENTS.normal.length)], type:'normal'});
+    if (Math.random()<0.5) r.push({name:TALENTS.rare[Math.floor(Math.random()*TALENTS.rare.length)], type:'rare'});
+    if (Math.random()<0.18) r.push({name:TALENTS.epic[Math.floor(Math.random()*TALENTS.epic.length)], type:'epic'});
+    if (Math.random()<0.07) r.push({name:TALENTS.legendary[Math.floor(Math.random()*TALENTS.legendary.length)], type:'legendary'});
+    if (Math.random()<0.3) r.push({name:TALENTS.negative[Math.floor(Math.random()*TALENTS.negative.length)], type:'negative'});
+    return r;
+}
+
+function calcRating(a, h, t) {
+    const base = (a.appearance+a.intelligence+a.constitution+a.wealth+a.eq)/5;
+    const hid = (h.willpower+h.luck+h.ambition+h.experience)/4;
+    let s = base*0.6 + hid*0.3;
+    t.forEach(x=>{
+        if (x.type==='rare') s+=5;
+        if (x.type==='epic') s+=10;
+        if (x.type==='legendary') s+=20;
+        if (x.type==='negative') s-=5;
+    });
+    if (s>=95) return 'SSR';
+    if (s>=85) return 'S';
+    if (s>=72) return 'A';
+    if (s>=58) return 'B';
+    if (s>=45) return 'C';
+    if (s>=30) return 'D';
+    return 'F';
+}
+
+// ============ 数字滚动（Q弹）============
+function rollNum(el, target, dur=1200, delay=0) {
+    return new Promise(res => {
+        setTimeout(() => {
+            const start = performance.now();
+            function frame(now) {
+                const elapsed = now - start;
+                const p = Math.min(elapsed/dur, 1);
+                if (p < 0.85) {
+                    el.textContent = Math.floor(Math.random()*100);
+                } else {
+                    const e = 1 - Math.pow(1-(p-0.85)/0.15, 3);
+                    el.textContent = Math.floor(target * e + parseInt(el.textContent||0)*(1-e));
+                }
+                if (p < 1) {
+                    requestAnimationFrame(frame);
+                } else {
+                    el.textContent = target;
+                    // Q弹效果
+                    el.style.animation = 'none';
+                    void el.offsetWidth;
+                    el.style.transition = 'transform 500ms cubic-bezier(0.34, 1.8, 0.64, 1)';
+                    el.style.transform = 'scale(1.6) rotate(-10deg)';
+                    setTimeout(() => {
+                        el.style.transform = 'scale(1) rotate(0deg)';
+                    }, 100);
+                    res();
+                }
+            }
+            requestAnimationFrame(frame);
+        }, delay);
+    });
+}
+
+// ============ 粒子（emoji版）============
+function spawn(x, y, emojis, count=20) {
+    const c = document.getElementById('particles');
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        p.style.left = x+'px';
+        p.style.top = y+'px';
+        p.style.fontSize = (20 + Math.random()*20) + 'px';
+        c.appendChild(p);
+        const ang = (Math.PI*2*i)/count + Math.random()*0.5;
+        const v = 100 + Math.random()*200;
+        const dx = Math.cos(ang)*v;
+        const dy = Math.sin(ang)*v;
+        const rotate = (Math.random()-0.5)*720;
+        const dur = 1000 + Math.random()*800;
+        p.animate([
+            {transform:'translate(0,0) scale(0) rotate(0deg)', opacity:1},
+            {transform:`translate(${dx*0.5}px,${dy*0.5}px) scale(1.2) rotate(${rotate*0.5}deg)`, opacity:1, offset:0.3},
+            {transform:`translate(${dx}px,${dy+150}px) scale(0.5) rotate(${rotate}deg)`, opacity:0}
+        ], {duration:dur, easing:'cubic-bezier(0.4,0,0.6,1)'}).onfinish = () => p.remove();
+    }
+}
+
+// ============ 撒花 ============
+function confetti() {
+    const colors = ['🎉','🎊','🌟','⭐','✨','💫','🎈','🎀','💖','🌸','🍭','🎁'];
+    for (let i = 0; i < 30; i++) {
+        setTimeout(() => {
+            const x = Math.random() * window.innerWidth;
+            const c = document.getElementById('particles');
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.textContent = colors[Math.floor(Math.random()*colors.length)];
+            p.style.left = x+'px';
+            p.style.top = '-30px';
+            p.style.fontSize = (24 + Math.random()*16) + 'px';
+            c.appendChild(p);
+            const dur = 2000 + Math.random()*1500;
+            const sway = (Math.random()-0.5)*200;
+            p.animate([
+                {transform:'translate(0,0) rotate(0deg)', opacity:1},
+                {transform:`translate(${sway}px,${window.innerHeight+50}px) rotate(720deg)`, opacity:0.5}
+            ], {duration:dur, easing:'cubic-bezier(0.4,0,0.6,1)'}).onfinish = () => p.remove();
+        }, i*60);
+    }
+}
+
+// ============ Toast ============
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ============ 吐槽气泡 ============
+function bubble(msg) {
+    const b = document.getElementById('bubble');
+    const card = document.getElementById('mainCard').getBoundingClientRect();
+    b.textContent = msg;
+    b.style.top = (card.top - 60) + 'px';
+    b.style.left = '50%';
+    b.classList.remove('show');
+    void b.offsetWidth;
+    b.classList.add('show');
+    setTimeout(()=>b.classList.remove('show'), 1500);
+}
+
+// ============ 屏幕震动 ============
+function shake() {
+    const card = document.getElementById('mainCard');
+    card.classList.add('shaking');
+    setTimeout(()=>card.classList.remove('shaking'), 600);
+}
+
+// ============ 头像表情 ============
+function setAvatar(emoji, avatarClass = '') {
+    const a = document.getElementById('avatar');
+    a.textContent = emoji;
+    a.className = 'avatar ' + avatarClass;
+    // 跳一下
+    a.style.animation = 'none';
+    void a.offsetWidth;
+    a.style.animation = 'cardEnter 600ms cubic-bezier(0.34, 1.8, 0.64, 1)';
+}
+
+// ============ 主流程 ============
+async function reroll() {
+    if (state.isRolling) return;
+    state.isRolling = true;
+    
+    document.getElementById('rerollBtn').disabled = true;
+    document.getElementById('startBtn').disabled = true;
+    
+    // 1. 卡片晃动
+    shake();
+    setAvatar('🤔', '');
+    
+    // 生成数据
+    const attrs = {
+        appearance: weightedAttr(),
+        intelligence: weightedAttr(),
+        constitution: weightedAttr(),
+        wealth: weightedAttr(),
+        eq: weightedAttr()
+    };
+    const hidden = {
+        willpower: weightedAttr(),
+        luck: weightedAttr(),
+        ambition: weightedAttr(),
+        experience: weightedAttr()
+    };
+    const loc = weightedPick(LOCATIONS);
+    const fam = weightedPick(FAMILIES);
+    const talents = genTalents();
+    const rating = calcRating(attrs, hidden, talents);
+    
+    // 2. 出生信息（弹一下）
+    setTimeout(() => {
+        const lv = document.getElementById('locationVal');
+        const fv = document.getElementById('familyVal');
+        [lv, fv].forEach((el, i) => {
+            setTimeout(() => {
+                el.style.animation = 'none';
+                void el.offsetWidth;
+                el.style.transform = 'scale(0)';
+                el.style.transition = 'transform 400ms cubic-bezier(0.34, 1.8, 0.64, 1)';
+                setTimeout(() => {
+                    if (i === 0) el.textContent = loc.name;
+                    else el.textContent = fam.name;
+                    el.style.transform = 'scale(1)';
+                }, 200);
+            }, i*100);
+        });
+    }, 100);
+    
+    // 3. 属性条
+    const promises = [];
+    Object.entries(attrs).forEach(([k,v], i) => {
+        const f = document.querySelector(`.attr-fill[data-attr="${k}"]`);
+        const e = document.querySelector(`.attr-value[data-val="${k}"]`);
+        setTimeout(() => {
+            f.style.width = v + '%';
+            e.className = 'attr-value tier-' + getTier(v);
+        }, i*100);
+        promises.push(rollNum(e, v, 1200, i*100));
+    });
+    
+    Object.entries(hidden).forEach(([k,v], i) => {
+        const e = document.querySelector(`.hidden-attr-value[data-hidden="${k}"]`);
+        promises.push(rollNum(e, v, 1000, 600 + i*80));
+    });
+    
+    await Promise.all(promises);
+    
+    // 4. 天赋登场
+    const tb = document.getElementById('talentsBox');
+    tb.innerHTML = '';
+    
+    for (let i = 0; i < talents.length; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        const t = talents[i];
+        const span = document.createElement('span');
+        span.className = 'talent ' + t.type;
+        span.textContent = t.name;
+        tb.appendChild(span);
+        
+        const rect = span.getBoundingClientRect();
+        const cx = rect.left + rect.width/2;
+        const cy = rect.top + rect.height/2;
+        
+        if (t.type === 'legendary') {
+            spawn(cx, cy, ['⭐','✨','🌟','💫','🎉'], 25);
+            shake();
+        } else if (t.type === 'epic') {
+            spawn(cx, cy, ['💜','✨','💫'], 15);
+        } else if (t.type === 'rare') {
+            spawn(cx, cy, ['💚','✨'], 10);
+        } else if (t.type === 'negative') {
+            spawn(cx, cy, ['💔','😱','⚡'], 10);
         }
-        updateUI();
     }
-
-    function updateUI() {
-        document.getElementById('age-display').innerText = `年龄: ${player.age} 岁`;
-        document.getElementById('val-int').innerText = player.int;
-        document.getElementById('val-str').innerText = player.str;
-        document.getElementById('val-mny').innerText = player.mny;
-        document.getElementById('val-hap').innerText = player.hap;
-        document.getElementById('bar-int').style.width = player.int + '%';
-        document.getElementById('bar-str').style.width = player.str + '%';
-        document.getElementById('bar-mny').style.width = player.mny + '%';
-        document.getElementById('bar-hap').style.width = player.hap + '%';
+    
+    // 5. 评级揭晓
+    await new Promise(r => setTimeout(r, 300));
+    const rg = document.getElementById('ratingGrade');
+    const rd = document.getElementById('ratingDesc');
+    const rs = document.getElementById('ratingSection');
+    const data = RATING_DATA[rating];
+    const desc = data.desc[Math.floor(Math.random()*data.desc.length)];
+    
+    rg.className = 'rating-grade grade-' + rating;
+    rg.textContent = rating;
+    rd.textContent = desc;
+    
+    rg.style.animation = 'none';
+    void rg.offsetWidth;
+    rg.style.animation = 'containerPop 600ms cubic-bezier(0.34, 1.8, 0.64, 1)';
+    
+    // 头像表情
+    setAvatar(data.emoji, data.avatar);
+    
+    const rect = rs.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    
+    if (rating === 'SSR') {
+        shake();
+        spawn(cx, cy, ['🌟','✨','💫','🎉','🎊','💖'], 50);
+        confetti();
+        toast('🥳 SSR！宇宙的宠儿是你！');
+        bubble('卧槽！这开局！直接封神！🤩');
+    } else if (rating === 'S') {
+        shake();
+        spawn(cx, cy, ['⭐','✨','🌟'], 30);
+        confetti();
+        toast('🤩 S级！天选之子！');
+        bubble(data.bubble[Math.floor(Math.random()*data.bubble.length)]);
+    } else if (rating === 'A') {
+        spawn(cx, cy, ['🔥','✨','⭐'], 20);
+        toast('😎 A级！开局起飞！');
+        bubble(data.bubble[Math.floor(Math.random()*data.bubble.length)]);
+    } else if (rating === 'B') {
+        spawn(cx, cy, ['👌','✨'], 12);
+        toast('😊 B级，还行还行～');
+        bubble(data.bubble[Math.floor(Math.random()*data.bubble.length)]);
+    } else if (rating === 'C') {
+        spawn(cx, cy, ['😐'], 8);
+        toast('😐 C级，普通人一枚');
+        bubble(data.bubble[Math.floor(Math.random()*data.bubble.length)]);
+    } else if (rating === 'D') {
+        spawn(cx, cy, ['😅'], 5);
+        toast('😅 D级，有点坎坷哦');
+        bubble(data.bubble[Math.floor(Math.random()*data.bubble.length)]);
+    } else {
+        spawn(cx, cy, ['💀','😭'], 8);
+        toast('💀 F级，命运多舛...');
+        bubble(data.bubble[Math.floor(Math.random()*data.bubble.length)]);
     }
+    
+    state.isRolling = false;
+    document.getElementById('rerollBtn').disabled = false;
+    document.getElementById('startBtn').disabled = false;
+}
 
-    function nextYear() {
-        if (!player.alive || player.waitingChoice) return;
-        player.age++;
+// ============ 事件 ============
+document.getElementById('rerollBtn').addEventListener('click', reroll);
 
-        let ev = events.find(e => e.age === player.age);
-        if (!ev) {
-            ev = { text: randomEvents[Math.floor(Math.random() * randomEvents.length)] };
-        }
+document.getElementById('randomNameBtn').addEventListener('click', () => {
+    const i = document.getElementById('nameInput');
+    i.style.transform = 'scale(0)';
+    i.style.transition = 'transform 200ms';
+    setTimeout(() => {
+        i.value = genName();
+        i.style.transition = 'transform 500ms cubic-bezier(0.34, 1.8, 0.64, 1)';
+        i.style.transform = 'scale(1.1)';
+        setTimeout(() => i.style.transform = 'scale(1)', 200);
+    }, 200);
+});
 
-        document.getElementById('event-card').innerText = ev.text;
-        document.getElementById('result-card').style.display = 'none';
+document.getElementById('genderToggle').addEventListener('click', () => {
+    state.gender = state.gender === '男' ? '女' : '男';
+    const btn = document.getElementById('genderToggle');
+    btn.style.transform = 'scale(0) rotate(180deg)';
+    setTimeout(() => {
+        btn.textContent = state.gender === '男' ? '♂' : '♀';
+        btn.style.background = state.gender === '男' ? 'var(--blue)' : 'var(--pink)';
+        btn.style.transition = 'transform 400ms cubic-bezier(0.34, 1.8, 0.64, 1)';
+        btn.style.transform = 'scale(1) rotate(0deg)';
+    }, 200);
+});
 
-        if (ev.effect) applyEffect(ev.effect);
+document.getElementById('avatar').addEventListener('click', () => {
+    const a = document.getElementById('avatar');
+    const emojis = ['😊','😎','🤔','🥳','😴','🤪','😇','🤩','😋','🥰'];
+    a.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    a.style.transform = 'scale(0.5) rotate(360deg)';
+    setTimeout(() => {
+        a.style.transition = 'transform 400ms cubic-bezier(0.34, 1.8, 0.64, 1)';
+        a.style.transform = 'scale(1) rotate(0deg)';
+    }, 200);
+});
 
-        if (ev.choices) {
-            player.waitingChoice = true;
-            document.getElementById('next-btn').disabled = true;
-            document.getElementById('next-btn').innerText = "请做出选择...";
-            const box = document.getElementById('choices-box');
-            box.innerHTML = '';
-            box.style.display = 'flex';
-            ev.choices.forEach((c, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'choice-btn';
-                btn.innerText = c.text;
-                btn.onclick = () => choose(idx, ev.choices);
-                box.appendChild(btn);
-            });
-        } else if (ev.death) {
-            player.alive = false;
-            setTimeout(showEnding, 600);
-        }
+document.getElementById('startBtn').addEventListener('click', () => {
+    startGame();
+});
 
-        updateUI();
+document.getElementById('nameInput').addEventListener('focus', function() { this.select(); });
+
+console.log('%c🎮 人间重开 · 搞笑版 ✨', 'font-size:24px;color:#FF6B9D;font-weight:900;');
+console.log('%c点击 🎲 再来！体验 Q 弹动效～', 'font-size:14px;color:#888;');
+
+// ============ 游戏核心系统 ============
+(function() {
+function $(id){return document.getElementById(id.replace(/^#/,''))}
+const API=location.hostname==='localhost'||location.hostname==='127.0.0.1'?'http://localhost:3000':'/.netlify/functions/chat';
+const AL={chr:'颜值',int:'智力',phy:'体质',wlth:'家境',eq:'情商'};
+const HL={wil:'意志',luk:'运气',amb:'野心',exp:'阅历',mor:'道德'};
+const AO=['chr','int','phy','wlth','eq'];
+const MA=80;
+
+const TE={
+  '早慧':{int:5},'讨喜':{eq:5},'运动健将':{phy:8},'能说会道':{eq:8},
+  '乐天派':{hap:10,wil:5},'节俭':{wlth:5},'爱看书':{int:8},
+  '人缘好':{eq:5,hap:5},'抗压':{wil:10},'动手能力强':{phy:5,int:3},
+  '小镇做题家':{int:10,exp:5},'社牛':{eq:10},'玻璃心':{hap:-5,eq:3},
+  '卷王':{amb:15,wil:5},'早熟':{exp:8,eq:5},'反骨':{mor:-10,wil:10},
+  '锦鲤体质':{luk:15},'钝感力':{wil:10,hap:5},'讨好型人格':{eq:10,mor:-5},
+  '孤勇者':{wil:15,amb:10},'独行者':{wil:10,exp:8},'观察家':{int:8,eq:5},
+  '灵感缪斯':{chr:10,eq:8},'天生领袖':{amb:15,eq:10},'沉默的智者':{int:12,exp:10},
+  '重生者':{luk:20,exp:15},'主角光环':{luk:25,hap:10},'天选打工人':{amb:10,wlth:10},
+  '命运弃子':{luk:-10,hap:-5,wil:10},'人间清醒':{eq:10,mor:10},'幸运儿':{luk:20},
+  '时代之子':{wlth:15,amb:10},'大器晚成':{exp:10,int:5},
+  '社恐':{eq:-12},'体弱多病':{phy:-15},'拖延症':{amb:-10,wil:-5},
+  '恋爱脑':{eq:-8,hap:5},'冲动消费':{wlth:-10},'敏感多疑':{eq:-8,wil:-5},
+  '低自尊':{wil:-10,hap:-5},'倒霉蛋':{luk:-15}
+};
+
+const EY=[
+  {age:3,text:'你第一次学会说完整的一句话。',effects:{int:1,eq:5}},
+  {age:6,text:'你上小学了，认识了第一个好朋友。',effects:{eq:1,hap:5}},
+  {age:8,text:'你被同学嘲笑长相，开始在意自己的外表。',effects:{hap:-10,eq:-3}},
+  {age:10,text:'你考了全班第一，爸妈非常高兴。',effects:{int:2,hap:5}},
+  {age:12,text:'班主任找你到办公室谈心。',effects:{eq:2},dialogue:'teacher'},
+  {age:14,text:'你偷偷喜欢上了班上的一个人。',effects:{hap:10,eq:1}},
+  {age:15,text:'你考上了重点高中。',effects:{int:5,hap:10}},
+  {age:16,text:'你偷偷写起了小说。',effects:{int:1,eq:2,hap:10}},
+  {age:18,text:'高考志愿填报，父亲想让你报师范。',effects:{},dialogue:'college'},
+  {age:21,text:'大学毕业了，站在人生的十字路口。',effects:{exp:5}},
+  {age:22,text:'你第一次参加正式面试。',effects:{},dialogue:'hr'},
+  {age:25,text:'妈妈安排了相亲，对方在咖啡馆等你。',effects:{},dialogue:'date'},
+  {age:27,text:'你第一次感到真正的经济压力。',effects:{hap:-15,wlth:-5}},
+  {age:30,text:'你的孩子出生了。',effects:{wlth:-10,hap:15}},
+  {age:35,text:'公司裁员，你被老板叫进办公室。',effects:{},dialogue:'layoff'},
+  {age:40,text:'你父亲生了一场重病。',effects:{wlth:-20,hap:-30}},
+  {age:42,text:'你升职成了部门负责人。',effects:{wlth:20,hap:10,amb:5}},
+  {age:45,text:'孩子进入了青春期。',effects:{hap:-5},dialogue:'teen'},
+  {age:60,text:'你光荣退休了。',effects:{hap:10}},
+  {age:70,text:'你坐在阳台上，回想这一生。',effects:{},dialogue:'life_review'},
+  {age:80,text:'在家人陪伴下，你安详地离开了这个世界。',effects:{},isEnding:true}
+];
+
+const DL={
+  college:{npc:'父亲',icon:'👨',title:'高考志愿',desc:'餐桌上，父亲放下筷子看着你',opening:'师范多稳定啊，你非要去学计算机？',dimensions:['理性','孝顺','独立'],difficulty:2,success:'父亲沉默良久，最终点了点头："你自己想清楚就行。"',fail:'父亲叹了口气，饭也没吃完就走了。',scoreEff:{int:5,hap:5},failEff:{hap:-10}},
+  date:{npc:'相亲对象',icon:'👩',title:'相亲',desc:'咖啡馆里，对方微笑着打量你',opening:'你好呀，听说你工作挺忙的？',dimensions:['真诚','幽默','共鸣','情商'],difficulty:3,success:'她笑得眼睛弯成月牙："你挺有意思的。"',fail:'她看了看手机："我还有点事，先走了。"',scoreEff:{hap:15,eq:5},failEff:{hap:-5,eq:-3}},
+  layoff:{npc:'老板',icon:'👨‍💼',title:'裁员谈判',desc:'老板办公室，桌上放着一份离职协议',opening:'公司效益不好，你也知道。你有什么想法？',dimensions:['理性','底线','谈判'],difficulty:4,success:'老板点点头："那就按你的方案来，再观察半年。"',fail:'老板摇了摇头："公司也是没办法，去财务结算吧。"',scoreEff:{wlth:15,hap:5,amb:5},failEff:{wlth:-15,hap:-15}},
+  life_review:{npc:'内心之声',icon:'🌅',title:'临终回顾',desc:'夕阳西下，你坐在阳台上静静回想',opening:'走过这一生，你最大的遗憾是什么？',dimensions:['真诚','释然','坦诚'],difficulty:3,success:'你微笑着闭上眼睛，内心一片宁静。',fail:'你张了张嘴，千言万语化作一声叹息。',scoreEff:{hap:20,exp:10},failEff:{hap:5,exp:5}},
+  teacher:{npc:'班主任',icon:'👩‍🏫',title:'谈心',desc:'办公室里，老师关切地看着你',opening:'最近是不是有什么心事？跟老师说说。',dimensions:['真诚','礼貌'],difficulty:1,success:'老师欣慰地笑了："你是个懂事的孩子。"',fail:'老师叹了口气："有什么事一定要说啊。"',scoreEff:{eq:5,hap:8},failEff:{hap:-5}},
+  hr:{npc:'HR',icon:'💼',title:'求职面试',desc:'面试官翻着你的简历',opening:'你为什么觉得自己适合这个岗位？',dimensions:['自信','能力','沟通'],difficulty:2,success:'HR微笑着点头："下周来入职吧。"',fail:'HR礼貌地说："有消息会通知你的。"',scoreEff:{wlth:10,hap:10},failEff:{hap:-10}},
+  teen:{npc:'孩子',icon:'🧑',title:'青春期冲突',desc:'孩子摔门进了房间，朝你大喊',opening:'你别管我！你根本不懂我！',dimensions:['共情','理解','克制'],difficulty:3,success:'孩子安静下来，小声说了句"对不起"。',fail:'孩子戴上耳机不再理你。',scoreEff:{eq:5,hap:10},failEff:{hap:-15}}
+};
+
+function FE(age){
+  const pool=[
+    {text:'你在妈妈怀里咯咯笑着。',effects:{hap:5,eq:1},min:0,max:2},
+    {text:'你学会了走路，虽然摇摇晃晃。',effects:{phy:2,hap:3},min:1,max:3},
+    {text:'你在公园里交到了第一个小伙伴。',effects:{eq:2,hap:5},min:3,max:5},
+    {text:'你问妈妈「我是从哪里来的？」',effects:{int:2},min:4,max:6},
+    {text:'你在学校运动会上拿了奖。',effects:{phy:3,hap:5},min:6,max:11},
+    {text:'你养的小狗跑丢了，哭了一整晚。',effects:{hap:-10},min:7,max:10},
+    {text:'你学会了骑自行车。',effects:{phy:2,hap:5},min:8,max:11},
+    {text:'你被选为班长。',effects:{eq:3,hap:5},min:9,max:11},
+    {text:'你第一次参加夏令营。',effects:{exp:3,hap:8},min:10,max:12},
+    {text:'你在期末考试中取得了好成绩。',effects:{int:2,hap:5},min:8,max:11},
+    {text:'你开始在意自己的穿着打扮。',effects:{chr:2},min:12,max:15},
+    {text:'你和好朋友吵架了，冷战了一周。',effects:{hap:-8,eq:-2},min:12,max:15},
+    {text:'你迷上了一本小说，上课偷偷看。',effects:{int:1,hap:5},min:13,max:16},
+    {text:'你被老师冤枉了一次，心里很委屈。',effects:{hap:-5,eq:2},min:14,max:17},
+    {text:'你参加了学校的文艺汇演。',effects:{chr:3,hap:8},min:15,max:17},
+    {text:'中考前你紧张得睡不着。',effects:{hap:-8,phy:-2},min:15,max:16},
+    {text:'你收到了大学录取通知书。',effects:{hap:15,exp:3},min:18,max:20},
+    {text:'大学的第一次社团招新让你眼花缭乱。',effects:{eq:2,hap:5},min:19,max:21},
+    {text:'你在一门课上挂了科，心情很低落。',effects:{hap:-10,int:-2},min:20,max:22},
+    {text:'你和室友通宵聊天，聊人生聊理想。',effects:{eq:3,hap:8},min:19,max:22},
+    {text:'你拿到了第一个月的工资。',effects:{wlth:5,hap:10},min:23,max:25},
+    {text:'你被领导当众表扬了。',effects:{hap:8,amb:3},min:23,max:28},
+    {text:'你加班到深夜，一个人在出租屋吃泡面。',effects:{hap:-10,phy:-2},min:24,max:28},
+    {text:'你和老同学聚会，发现大家变化都很大。',effects:{exp:3},min:25,max:29},
+    {text:'你养了一只猫，生活多了些温暖。',effects:{hap:10},min:26,max:30},
+    {text:'你在工作上遇到了瓶颈期。',effects:{hap:-8,amb:3},min:30,max:35},
+    {text:'你开始认真考虑买房子的事。',effects:{wlth:-5,hap:-5},min:30,max:35},
+    {text:'你的发小突然联系你，说要借钱。',effects:{wlth:-5,mor:3},min:31,max:38},
+    {text:'你参加了一场行业会议，开阔了眼界。',effects:{int:3,exp:5},min:32,max:38},
+    {text:'你开始脱发了，焦虑地去医院检查。',effects:{hap:-5,phy:-2},min:33,max:39},
+    {text:'你和一个很久没见的朋友重逢了。',effects:{hap:10,eq:2},min:34,max:39},
+    {text:'你开始养生，保温杯里泡枸杞。',effects:{phy:3},min:40,max:49},
+    {text:'你的白发越来越多了。',effects:{chr:-2,hap:-5},min:42,max:48},
+    {text:'你被邀请回母校做分享。',effects:{hap:8,exp:5},min:43,max:48},
+    {text:'你第一次感觉到身体不如从前了。',effects:{phy:-5,hap:-5},min:45,max:50},
+    {text:'你和爱人单独出去旅行了一次。',effects:{hap:15,eq:3},min:44,max:49},
+    {text:'你开始学习一项新技能。',effects:{int:2,hap:5},min:50,max:58},
+    {text:'你的孩子离家上大学了，家里空荡荡的。',effects:{hap:-10,eq:2},min:50,max:55},
+    {text:'你翻到了年轻时的照片，看了很久。',effects:{hap:5,exp:5},min:52,max:58},
+    {text:'你和老友约好退休后一起去旅行。',effects:{hap:10},min:55,max:60},
+    {text:'你开始学广场舞，认识了一群新朋友。',effects:{hap:12,phy:3},min:60,max:65},
+    {text:'你的孙子孙女叫你爷爷奶奶。',effects:{hap:20},min:62,max:68},
+    {text:'你写了一本回忆录的手稿。',effects:{exp:10,hap:8},min:63,max:69},
+    {text:'你的老同学突然离世，你沉默了一整天。',effects:{hap:-15,exp:5},min:65,max:70},
+    {text:'你在公园下棋，输给了多年的老对手。',effects:{hap:5},min:70,max:75},
+    {text:'你开始听不清别人说话了。',effects:{eq:-2,hap:-5},min:72,max:78},
+    {text:'孩子们回来看你，家里热热闹闹的。',effects:{hap:20},min:73,max:78},
+    {text:'你收到了远方朋友寄来的信。',effects:{hap:10,eq:2},min:75,max:79}
+  ];
+  return pool.filter(e=>age>=e.min&&age<=e.max)[0]||null;
+}
+
+function checkTags(s){
+  const tags=[];
+  const c=s.chr,i=s.int,p=s.phy,w=s.wlth,e=s.eq;
+  const ha=s._hapCount>0?s._hapSum/s._hapCount:50;
+  const dia=s._dialogues||{};
+  if(i>=70&&['三四线城市','县城','偏远农村'].includes(s._birthPlace)) tags.push({name:'小镇做题家',desc:'用笔改变了自己的命运。',rarity:'稀有'});
+  if(w<=30&&i>=60) tags.push({name:'寒门贵子',desc:'从贫瘠的土壤长出了枝芽。',rarity:'稀有'});
+  if(i>=70&&s.amb>=70&&ha<=30) tags.push({name:'孤独之王',desc:'你赢了很多人，却没赢过自己。',rarity:'稀有'});
+  if(e>=60&&ha>=60) tags.push({name:'关系大师',desc:'没有大富大贵，但人缘很好。',rarity:'普通'});
+  if(dia.college&&dia.layoff) tags.push({name:'人生赢家',desc:'关键路口你都走对了。',rarity:'传说'});
+  if(dia.layoff) tags.push({name:'危机公关',desc:'面对裁员没有被打倒。',rarity:'稀有'});
+  if(w<=30&&ha>=60) tags.push({name:'苟住就是赢',desc:'平凡也是一种胜利。',rarity:'普通'});
+  if(s.mor>=50) tags.push({name:'人间清醒',desc:'没有被世俗规则绑架。',rarity:'稀有'});
+  if(s._disasters&&ha>=50) tags.push({name:'不倒翁',desc:'经历了再多风雨也没有倒下。',rarity:'传说'});
+  if(s.amb>=70&&w>=60) tags.push({name:'时代骄子',desc:'赶上了时代的风口。',rarity:'稀有'});
+  if(s.luk>=70&&!s._disasters) tags.push({name:'天选之人',desc:'运气从来没有亏待过你。',rarity:'稀有'});
+  if(w<=20&&p>=70) tags.push({name:'逆袭者',desc:'什么都没有，拼的就是身体。',rarity:'稀有'});
+  if(!dia.college&&!dia.date&&!dia.layoff&&!dia.life_review) tags.push({name:'普通人的一生',desc:'平平淡淡，普普通通走过。',rarity:'普通'});
+  return tags.filter(Boolean);
+}
+
+let G={},sceneState={};
+function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v))}
+
+function applyEffects(eff){
+  if(!eff) return;
+  for(const[k,v]of Object.entries(eff)){
+    if(k==='hap') G.hap=clamp(G.hap+v,0,100);
+    else if(k==='mor') G.mor=clamp(G.mor+v,-100,100);
+    else if(k==='chr'||k==='int'||k==='phy'||k==='wlth'||k==='eq') G[k]=clamp(G[k]+v,1,100);
+    else if(k==='wil'||k==='luk'||k==='amb'||k==='exp') G[k]=clamp(G[k]+v,1,100);
+  }
+}
+
+function renderGameAttrs(){
+  $('#gameAttrs').innerHTML=AO.map(k=>{
+    const v=G[k]||50;
+    const colors={chr:'#FF6B9D',int:'#4D96FF',phy:'#6BCB77',wlth:'#FFD93D',eq:'#B983FF'};
+    return `<div class="ga-row"><span class="ga-label">${AL[k]}</span><div class="ga-bar-bg"><div class="ga-bar-fill" style="width:${v}%;background:${colors[k]}"></div></div><span class="ga-val">${v}</span></div>`;
+  }).join('');
+}
+
+function renderGameHidden(){
+  const items=[{k:'wil',label:'意志'},{k:'luk',label:'运气'},{k:'amb',label:'野心'},{k:'exp',label:'阅历'},{k:'mor',label:'道德'}];
+  $('#ga-hidden-attrs').innerHTML=items.map(i=>`<span class="gha-item">${i.label}: ${G[i.k]||0}</span>`).join('');
+}
+
+function toggleGameHidden(){
+  const box=$('#ga-hidden-attrs');
+  const toggle=$('#ga-hidden-toggle');
+  box.classList.toggle('show');
+  toggle.textContent=box.classList.contains('show')?'▲ 收起隐藏属性':'▼ 展开隐藏属性';
+}
+
+function startGame(){
+  const name=$('#nameInput').value;
+  const gender=state.gender;
+  const attrs={};
+  ['appearance','intelligence','constitution','wealth','eq'].forEach(k=>{
+    attrs[k]=parseInt(document.querySelector(`.attr-value[data-val="${k}"]`).textContent)||50;
+  });
+  const hidden={};
+  ['willpower','luck','ambition','experience'].forEach(k=>{
+    hidden[k]=parseInt(document.querySelector(`.hidden-attr-value[data-hidden="${k}"]`).textContent)||50;
+  });
+  const talentEls=document.querySelectorAll('#talentsBox .talent');
+  const talents=[];
+  talentEls.forEach(el=>talents.push({name:el.textContent,type:el.className.replace('talent ','')}));
+  const location=$('#locationVal').textContent;
+  const family=$('#familyVal').textContent;
+
+  G={
+    name,gender,
+    chr:attrs.appearance,int:attrs.intelligence,phy:attrs.constitution,
+    wlth:attrs.wealth,eq:attrs.eq,
+    wil:hidden.willpower,luk:hidden.luck,amb:hidden.ambition,exp:hidden.experience,
+    mor:0,hap:60,
+    _talents:talents,_birthPlace:location,_family:family,
+    age:0,history:[],_hapSum:0,_hapCount:0,_disasters:0,_shortLife:false,_dialogues:{}
+  };
+
+  talents.forEach(t=>{
+    const eff=TE[t.name];
+    if(eff) for(const[k,v]of Object.entries(eff)){
+      if(k==='hap') G.hap=clamp(G.hap+v,0,100);
+      else if(k==='mor') G.mor=clamp(G.mor+v,-100,100);
+      else if(k in G) G[k]=clamp(G[k]+v,1,100);
     }
+  });
 
-    function choose(idx, choices) {
-        const c = choices[idx];
-        applyEffect(c.effect);
-        document.getElementById('result-card').innerText = c.result;
-        document.getElementById('result-card').style.display = 'block';
-        document.getElementById('choices-box').style.display = 'none';
-        document.getElementById('next-btn').disabled = false;
-        document.getElementById('next-btn').innerText = "下一年";
-        player.waitingChoice = false;
+  G._keyEventMap={};
+  EY.forEach(evt=>G._keyEventMap[evt.age]=evt);
+
+  const c=$('#container');
+  c.style.transition='all 600ms cubic-bezier(0.4,0,1,1)';
+  c.style.transform='translateY(-30px) scale(0.85) rotate(5deg)';
+  c.style.opacity='0';
+  setTimeout(()=>{
+    c.style.display='none';
+    c.style.transform='';c.style.opacity='1';
+    $('#gameContainer').classList.add('active');
+    renderGameAttrs();
+    renderGameHidden();
+    enterYear(0);
+  },600);
+}
+
+function enterYear(age){
+  G.age=age;
+  const pct=(age/MA)*100;
+  $('#gameAge').textContent=`${age} 岁`;
+  $('#lifeBar').style.width=pct+'%';
+  $('#yearCount').textContent=`${age} / ${MA}`;
+  G._hapSum=(G._hapSum||0)+(G.hap||50);
+  G._hapCount=(G._hapCount||0)+1;
+  if(age>=MA){showEnding();return}
+  const keyEvent=G._keyEventMap[age];
+  if(keyEvent?.dialogue){
+    const dlg=DL[keyEvent.dialogue];
+    if(dlg){
+      applyEffects(keyEvent.effects);
+      renderGameAttrs();
+      G.history.push({age,text:keyEvent.text||dlg.title,choice:'（触发关键对话）',effects:keyEvent.effects||{}});
+      startDialogue(keyEvent.dialogue);
+      return;
     }
+  }
+  if(keyEvent?.isEnding){
+    applyEffects(keyEvent.effects);
+    renderGameAttrs();
+    G.history.push({age,text:keyEvent.text,choice:'——',effects:keyEvent.effects||{}});
+    showEnding();return;
+  }
+  let event=null;
+  if(keyEvent) event={text:keyEvent.text,effects:keyEvent.effects||{}};
+  else{const f=FE(age);if(f)event={text:f.text,effects:f.effects||{}}}
+  if(!event){showEmptyYear(age);return}
+  showEvent(age,event);
+}
 
-    function showEnding() {
-        document.getElementById('game-page').style.display = 'none';
-        document.getElementById('ending-page').style.display = 'block';
+function showEvent(age,event){
+  G.lastEvent=event;
+  $('#eventText').textContent=event.text;
+  $('#eventSource').textContent='';
+  $('#gameResult').style.display='none';
+  $('#nextYearBtn').style.display='none';
+  $('#errorBox').style.display='none';
+  const box=$('#gameChoices');
+  box.innerHTML='';box.style.display='flex';
+  $('#custom-area').style.display='block';
+  $('#custom-input').value='';
+  $('#custom-submit').disabled=false;
+  const choices=generateChoices(age,event);
+  choices.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.textContent=c.text;
+    btn.onclick=()=>handleChoice(i,choices,age);
+    box.appendChild(btn);
+  });
+}
 
-        const total = player.int + player.str + player.mny + player.hap;
-        let title, desc, icon;
-        if (total >= 300) {
-            icon = '👑'; title = '传奇人生'; desc = '你的一生精彩纷呈，名利双收，是众人羡慕的对象。';
-        } else if (total >= 240) {
-            icon = '🌟'; title = '幸福美满'; desc = '你过得充实而快乐，家庭和睦，事业顺遂，令人羡慕。';
-        } else if (total >= 180) {
-            icon = '🍵'; title = '平平淡淡'; desc = '你没有大富大贵，但也没有大灾大难，这是大多数人的常态。';
-        } else if (total >= 120) {
-            icon = '🍂'; title = '略带遗憾'; desc = '人生多舛，几次关键选择都不尽如人意，但你依然坚强地走过了这一生。';
-        } else {
-            icon = '🥀'; title = '遗憾终生'; desc = '命运似乎总在和你开玩笑，一生坎坷，令人唏嘘。';
-        }
+function generateChoices(age,event){
+  const eff=event.effects||{};
+  const choices=[];
+  if(eff.int>0||eff.eq>0) choices.push({text:'把握机会，积极面对',effects:{...eff,hap:(eff.hap||0)+3},result:'你的积极态度带来了好结果。'});
+  else if(eff.hap<0) choices.push({text:'坚强面对，相信会好起来',effects:{wil:3,hap:Math.max(eff.hap+5,-5)},result:'你咬着牙挺了过来。'});
+  else choices.push({text:'认真对待这件事',effects:{...eff,hap:(eff.hap||0)+3},result:'你做出了正确的决定。'});
 
-        document.getElementById('ending-icon').innerText = icon;
-        document.getElementById('ending-title').innerText = title;
-        document.getElementById('ending-desc').innerText = desc;
-        document.getElementById('ending-stats').innerHTML = `
-            <div class="ending-score">智力: ${player.int}　体质: ${player.str}　财富: ${player.mny}　快乐: ${player.hap}</div>
-            <div class="ending-score">总分: ${total} / 400</div>
-        `;
-    }
+  if(eff.wlth<0) choices.push({text:'想办法减少损失',effects:{wlth:Math.max(eff.wlth+5,-5),int:2},result:'你及时止损，还算明智。'});
+  else if(Object.values(eff).some(v=>v>0)) choices.push({text:'保持低调，稳步前进',effects:{hap:5,eq:1},result:'稳扎稳打才是长久之道。'});
+  else choices.push({text:'随遇而安',effects:{hap:5},result:'你选择了顺其自然。'});
 
-    function resetGame() {
-        player = { age: 0, alive: true, int: 50, str: 50, mny: 50, hap: 50, waitingChoice: false };
-        document.getElementById('game-page').style.display = 'block';
-        document.getElementById('ending-page').style.display = 'none';
-        document.getElementById('event-card').innerText = "你出生了，伴随着一声啼哭来到这个世界。";
-        document.getElementById('result-card').style.display = 'none';
-        document.getElementById('choices-box').style.display = 'none';
-        document.getElementById('next-btn').disabled = false;
-        document.getElementById('next-btn').innerText = "下一年";
-        updateUI();
-    }
+  choices.push({text:age<18?'找朋友聊聊':'和信任的人商量',effects:{eq:2,hap:5},result:'有人分担，心里好受多了。'});
+  return choices;
+}
 
-    updateUI();
+function handleChoice(idx,choices,age){
+  if(G.busy) return;G.busy=true;
+  const choice=choices[idx];
+  applyEffects(choice.effects);
+  renderGameAttrs();
+  G.history.push({age,text:G.lastEvent?.text||'',choice:choice.text,result:choice.result,effects:choice.effects});
+  $('#gameChoices').style.display='none';
+  $('#custom-area').style.display='none';
+  const rc=$('#gameResult');
+  $('#resultText').textContent=choice.result;
+  const effStr=Object.entries(choice.effects).filter(([k,v])=>v!==0).map(([k,v])=>{
+    const label=AL[k]||HL[k]||(k==='hap'?'心情':k);
+    return `${label}${v>0?'+':''}${v}`;
+  }).join(' ');
+  $('#resultEffects').textContent=effStr?'✦ '+effStr:'';
+  rc.style.display='block';
+  const btn=$('#nextYearBtn');
+  const na=age+1;
+  btn.textContent=na>=MA?'查看人生总结':`${na} 岁 →`;
+  btn.style.display='block';btn.disabled=false;
+  btn.onclick=()=>{btn.style.display='none';rc.style.display='none';G.busy=false;enterYear(na)};
+}
+
+function showEmptyYear(age){
+  G.lastEvent=null;
+  $('#eventText').textContent=`${age} 岁，平淡的一年，没有什么特别的事情发生。`;
+  $('#eventSource').textContent='';
+  $('#gameResult').style.display='none';
+  $('#nextYearBtn').style.display='none';
+  $('#errorBox').style.display='none';
+  const box=$('#gameChoices');
+  box.innerHTML='';box.style.display='flex';
+  const defChoices=[
+    {text:age<18?'好好学习':'努力工作',effects:age<18?{int:2,hap:3}:{wlth:3,hap:2},result:'你踏实过好了每一天。'},
+    {text:age<60?'发展兴趣爱好':'享受生活',effects:{hap:8,eq:1},result:'你找到了生活的乐趣。'},
+    {text:'锻炼身体',effects:{phy:3,hap:2},result:'身体是革命的本钱。'}
+  ];
+  defChoices.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';btn.textContent=c.text;
+    btn.onclick=()=>handleChoice(i,defChoices,age);
+    box.appendChild(btn);
+  });
+  $('#custom-area').style.display='block';
+  $('#custom-input').value='';$('#custom-submit').disabled=false;
+}
+
+function evaluateCustomOffline(text){
+  const t=text.toLowerCase();
+  let result,effects={hap:3};
+  if(/学习|读书|看[书课]|复习|考|研究|阅读/.test(t)){effects={int:3,hap:2};result='你静下心来学习，充实了自己。';}
+  else if(/健身|跑步|运动|锻炼|打球|游泳|瑜伽/.test(t)){effects={phy:3,hap:4};result='出了一身汗，整个人都轻松了。';}
+  else if(/赚钱|工作|加班|兼职|创业|投资|理财/.test(t)){effects={wlth:3,hap:-2,phy:-1};result='你努力赚钱，虽然累了点但值得。';}
+  else if(/表白|约会|相亲|恋爱|求婚|送[花礼]/.test(t)){effects={eq:2,hap:8};result='对方被你的真诚打动了。';}
+  else if(/旅[游行]|玩|放松|休息|睡|度假/.test(t)){effects={hap:10};result='你好好放松了一下，心情大好。';}
+  else if(/道歉|认错|对不起|悔过/.test(t)){effects={mor:5,hap:3};result='你诚恳地道了歉，关系修复了。';}
+  else if(/帮[助人]|志愿|公益|捐[款赠]/.test(t)){effects={mor:8,hap:6};result='帮助别人让你感到很快乐。';}
+  else if(/吵[架闹]|打[架人]|骂|发火/.test(t)){effects={hap:-8,mor:-3};result='一时冲动让事情变得更糟了。';}
+  else if(/吃[饭好]|美食|烹饪|做[饭菜]/.test(t)){effects={hap:5,phy:1};result='美食治愈了你的心。';}
+  else result='你做出了自己的选择。';
+  return{effects,result};
+}
+
+async function submitCustomAction(){
+  if(G.busy)return;
+  const input=$('#custom-input');
+  const text=input.value.trim();
+  if(!text)return;
+  G.busy=true;
+  $('#custom-submit').disabled=true;
+  $('#gameChoices').style.display='none';
+  $('#eventText').textContent='命运正在回应...';
+  try{
+    const resp=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:'你是一个人生命运模拟器。'},{role:'user',content:`年龄${G.age}岁，事件：${G.lastEvent?.text||''}，自定义行动：${text}。返回JSON:{"result":"描述","effects":{"hap":0}}`}],response_format:{type:'json_object'},max_tokens:200})});
+    if(!resp.ok)throw Error('API error');
+    const data=await resp.json();
+    const c=data?.choices?.[0]?.message?.content;
+    if(!c)throw Error('empty');
+    const p=JSON.parse(c);
+    if(!p.result)throw Error('bad');
+    applyEffects(p.effects);
+    renderGameAttrs();
+    G.history.push({age:G.age,text:G.lastEvent?.text||'',choice:'【自定义】'+text,result:p.result,effects:p.effects||{}});
+    showCustomResult(p.result,p.effects);
+  }catch(e){
+    const fb=evaluateCustomOffline(text);
+    applyEffects(fb.effects);
+    renderGameAttrs();
+    G.history.push({age:G.age,text:G.lastEvent?.text||'',choice:'【自定义】'+text,result:fb.result,effects:fb.effects||{}});
+    showCustomResult(fb.result,fb.effects);
+  }
+}
+
+function showCustomResult(resultText,effects){
+  $('#custom-area').style.display='none';
+  $('#eventText').textContent=G.lastEvent?.text||'';
+  const rc=$('#gameResult');
+  $('#resultText').textContent=resultText;
+  const effStr=Object.entries(effects||{}).filter(([k,v])=>v!==0).map(([k,v])=>{
+    const label=AL[k]||HL[k]||(k==='hap'?'心情':k);
+    return `${label}${v>0?'+':''}${v}`;
+  }).join(' ');
+  $('#resultEffects').textContent=effStr?'✦ '+effStr:'';
+  rc.style.display='block';
+  const btn=$('#nextYearBtn');
+  const na=G.age+1;
+  btn.textContent=na>=MA?'查看人生总结':`${na} 岁 →`;
+  btn.style.display='block';btn.disabled=false;
+  btn.onclick=()=>{btn.style.display='none';rc.style.display='none';G.busy=false;enterYear(na)};
+}
+
+function startDialogue(id){
+  const dlg=DL[id];
+  if(!dlg)return;
+  sceneState={id,messages:[],turn:0,maxTurns:3,done:false,score:0};
+  $('#gameContainer').classList.remove('active');
+  $('#dlgContainer').classList.add('active');
+  $('#dlgNpcIcon').textContent=dlg.icon;
+  $('#dlgNpcName').textContent=`${dlg.npc} · ${dlg.title}`;
+  $('#dlgNpcDesc').textContent=dlg.desc;
+  $('#dlg-score').style.display='none';
+  $('#dlgNextBtn').style.display='none';
+  $('#dlgChat').innerHTML='';
+  addDlgMsg('npc',dlg.opening);
+  $('#dlg-input').disabled=false;$('#dlg-input').value='';
+  $('#dlg-send').disabled=false;$('#dlg-input').focus();
+}
+
+function addDlgMsg(role,text){
+  const chat=$('#dlgChat');
+  const msg=document.createElement('div');
+  msg.className='dlg-msg '+role;
+  msg.innerHTML=`<div class="bubble">${text}</div>`;
+  chat.appendChild(msg);
+  chat.scrollTop=chat.scrollHeight;
+  sceneState.messages.push({role,text});
+}
+
+function sendDlgMsg(){
+  if(sceneState.done)return;
+  const input=$('#dlg-input');
+  const text=input.value.trim();
+  if(!text)return;
+  addDlgMsg('player',text);
+  input.value='';
+  $('#dlg-send').disabled=true;
+  sceneState.turn++;
+  const dlg=DL[sceneState.id];
+  const kw={
+    '理性':['分析','考虑','觉得','方案','数据','规划','应该','因为'],
+    '孝顺':['听你的','为您','担心','照顾','放心','孝敬','爸妈','家里'],
+    '独立':['我想','我决定','我的选择','坚持','相信','自己','梦想'],
+    '自信':['我有','我可以','我能','相信','一定','肯定','擅长'],
+    '能力':['经验','做过','项目','学习','专业','技能','成绩'],
+    '沟通':['交流','商量','一起','我们','聊聊','沟通'],
+    '真诚':['对不起','谢谢','真的','其实','心里话','坦白'],
+    '幽默':['哈哈','好笑','逗','有趣','笑','段子','开玩笑'],
+    '共鸣':['我也是','理解','一样','懂','明白','同感'],
+    '情商':['理解','感受','在乎','关心','体谅','换位思考'],
+    '底线':['但是','原则','希望','不能','合理'],
+    '谈判':['方案','折中','双方','共赢','条件','考虑'],
+    '共情':['理解','感受','难过','不易','辛苦','知道'],
+    '克制':['冷静','深呼吸','先','好好说','不急'],
+    '释然':['接受','放下','释怀','感恩','值得','不后悔'],
+    '坦诚':['说实话','坦白','承认','其实','一直']
+  };
+  const lastMsg=sceneState.messages[sceneState.messages.length-1]?.text||'';
+  let dimScore=0;
+  for(const dim of dlg.dimensions){
+    const kws=kw[dim]||[];
+    dimScore+=kws.filter(k=>lastMsg.includes(k)).length;
+  }
+  if(lastMsg.length>15)dimScore+=1;
+  if(lastMsg.length>40)dimScore+=1;
+  if(G.eq>=70)dimScore+=1;
+  const passed=dimScore>=dlg.difficulty;
+  if(sceneState.turn>=sceneState.maxTurns){
+    sceneState.done=true;
+    sceneState.score=passed?1:0;
+    G._dialogues[sceneState.id]=sceneState.score;
+    $('#dlg-send').disabled=true;$('#dlg-input').disabled=true;
+    addDlgMsg('npc',passed?dlg.success:dlg.fail);
+    if(passed&&dlg.scoreEff) applyEffects(dlg.scoreEff);
+    else if(!passed&&dlg.failEff) applyEffects(dlg.failEff);
+    renderGameAttrs();
+    const lastH=G.history[G.history.length-1];
+    if(lastH&&lastH.choice==='（触发关键对话）') lastH.result=passed?'对话圆满':'对话遗憾';
+    $('#dlgScoreTitle').textContent=passed?`✦ ${dlg.npc} 对你印象不错 ✦`:'对话略显尴尬';
+    $('#dlgScoreDesc').textContent=`评分：${dimScore}/${dlg.difficulty}`;
+    $('#dlg-score').style.display='block';
+    $('#dlgNextBtn').style.display='inline-block';
+  }else{
+    const replies={
+      college:['父亲沉默了一下："爸也是为你好。"','"你自己好好想想吧。"','父亲叹了口气："路是你自己的。"'],
+      date:['她笑了笑："你还挺有意思的。"','"那你平时休息都做什么？"','她轻轻搅动咖啡："继续说。"'],
+      layoff:['王总看着你："继续。"','"你的想法我知道了。"','他靠在椅背上："还有吗？"'],
+      life_review:['脑海中浮现往事："那时候..."','"你后悔过吗？"','夕阳照在你脸上："然后呢？"'],
+      teacher:['老师点点头："你明白就好。"','"要学会保护自己。"','老师温和地看着你。'],
+      hr:['HR微微点头："还有补充的吗？"','"你的简历上写..."','HR在笔记本上记了几笔。'],
+      teen:['孩子扭过头："说了你也不懂。"','"你每次都是这样！"','孩子的声音低了下来。']
+    };
+    const rpl=replies[sceneState.id]||['对方看着你："接着说。"'];
+    setTimeout(()=>{
+      addDlgMsg('npc',rpl[Math.floor(Math.random()*rpl.length)]);
+      $('#dlg-send').disabled=false;$('#dlg-input').focus();
+    },600);
+  }
+}
+
+function endDialogue(){
+  $('#dlgContainer').classList.remove('active');
+  $('#gameContainer').classList.add('active');
+  const btn=$('#nextYearBtn');
+  const na=G.age+1;
+  btn.textContent=na>=MA?'查看人生总结':`${na} 岁 →`;
+  btn.style.display='block';btn.disabled=false;
+  $('#gameResult').style.display='none';
+  btn.onclick=()=>{btn.style.display='none';G.busy=false;enterYear(na)};
+}
+
+function showEnding(){
+  $('#gameContainer').classList.remove('active');
+  $('#endContainer').classList.add('active');
+  const avgHap=G._hapSum/Math.max(G._hapCount,1);
+  const baseScore=(G.chr+G.int+G.phy+G.wlth+G.eq)/5;
+  const hapScore=avgHap;
+  const wlthScore=G.wlth;
+  const diaScore=(()=>{const d=G._dialogues||{};let t=0,c=0;if(d.college!==undefined){t+=d.college*30;c++}if(d.date!==undefined){t+=d.date*25;c++}if(d.layoff!==undefined){t+=d.layoff*25;c++}if(d.life_review!==undefined){t+=d.life_review*20;c++}return c>0?t/c:0
+})();
+  const tags=checkTags(G);
+  const tagScore=Math.min(tags.length*8,40);
+  const finalScore=Math.round(baseScore*0.30+hapScore*0.25+wlthScore*0.15+diaScore*0.20+tagScore*0.10);
+  const capped=clamp(finalScore,0,100);
+  let grade,gc,icon,title,desc;
+  if(capped>=90){grade='SSS';gc='grade-SSS';icon='👑';title='传奇人生';desc='万中无一的人生，每一段都精彩绝伦。';}
+  else if(capped>=80){grade='S';gc='grade-S';icon='🌟';title='圆满人生';desc='你的一生幸福而充实，堪称完美。';}
+  else if(capped>=70){grade='A';gc='grade-A';icon='💎';title='成功人生';desc='虽然有些小遗憾，但总体非常出色。';}
+  else if(capped>=60){grade='B';gc='grade-B';icon='🍵';title='普通人生';desc='平凡中透着幸福，这是大多数人的写照。';}
+  else if(capped>=45){grade='C';gc='grade-C';icon='🍂';title='平凡之路';desc='有起有落，平平淡淡才是真。';}
+  else if(capped>=30){grade='D';gc='grade-D';icon='🌧';title='遗憾人生';desc='命运的考验比常人多了一些。';}
+  else{grade='F';gc='grade-F';icon='🥀';title='坎坷一生';desc='命运从未眷顾，但你依然走到了最后。';}
+  $('#endIcon').textContent=icon;
+  $('#endTitle').textContent=title;
+  const eg=$('#endGrade');
+  eg.textContent=grade;
+  eg.className='end-grade '+gc;
+  $('#endDesc').textContent=desc;
+  const diaStr=Object.entries(G._dialogues||{}).filter(([k,v])=>v>0).map(([k])=>({college:'高考',date:'相亲',layoff:'裁员',life_review:'回顾',teacher:'谈心',hr:'面试',teen:'亲子'}[k]||k)).join('·');
+  $('#endDetail').innerHTML=`<div>${G._birthPlace||''} ${G._family||''}</div><div>颜值${G.chr} · 智力${G.int} · 体质${G.phy} · 家境${G.wlth} · 情商${G.eq}</div><div>幸福指数 ${Math.round(avgHap)}/100 · 财富 ${G.wlth}</div>${diaStr?'<div>关键对话：'+diaStr+'</div>':''}${tags.length?'<div>人生标签 ×'+tags.length+'</div>':''}`;
+  $('#endTags').innerHTML=tags.length?tags.map(t=>`<span class="etag">${t.rarity==='传说'?'🌟':t.rarity==='稀有'?'✨':''} ${t.name}</span>`).join(''):'<span class="etag">独一无二的你</span>';
+  let hist='';
+  for(const h of G.history){
+    hist+=`<div class="eh-item"><span class="eh-age">${h.age}岁</span> ${h.choice.substring(0,25)}${h.choice.length>25?'…':''}</div>`;
+  }
+  $('#endHistory').innerHTML=hist?`<div style="font-weight:bold;margin-bottom:4px;color:var(--ink);font-size:12px;">📖 人生回顾</div>`+hist:'';
+}
+
+function resetGame(){
+  G={};sceneState={};
+  $('#endContainer').classList.remove('active');
+  $('#gameContainer').classList.remove('active');
+  $('#dlgContainer').classList.remove('active');
+  const c=$('#container');
+  c.style.display='block';c.style.transform='';c.style.opacity='1';
+}
+
+// Event listeners
+document.getElementById('custom-submit').addEventListener('click',submitCustomAction);
+document.getElementById('dlg-send').addEventListener('click',sendDlgMsg);
+document.getElementById('custom-input').addEventListener('keydown',function(e){if(e.ctrlKey&&e.key==='Enter')submitCustomAction()});
+document.getElementById('dlg-input').addEventListener('keydown',function(e){if(e.key==='Enter')sendDlgMsg()});
+document.getElementById('dlgNextBtn').addEventListener('click',endDialogue);
+window.toggleGameHidden=toggleGameHidden;
+window.resetGame=resetGame;
+window.startGame=startGame;
+
+})();
+
 </script>
 
 </body>
