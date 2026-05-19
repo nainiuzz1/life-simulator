@@ -2,7 +2,8 @@
 .claude
 .netlify
 node_modules
-.npm-cache
+.npm-cache*
+.deploy-site
 scf
 scf-deploy.zip
 server.js

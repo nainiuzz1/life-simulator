@@ -2,7 +2,8 @@ node_modules/
 .env
 .netlify/
 .claude/
-.npm-cache/
+.npm-cache*/
+.deploy-site/
 scf/
 scf-deploy.zip
 dist/
